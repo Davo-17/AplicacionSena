@@ -1,15 +1,97 @@
 document.addEventListener('DOMContentLoaded', () => {
 
   // =====================================================
-  // 1. REGISTRO Y PERFIL DE USUARIO
+  // 0. CONFIGURACIÓN DE API
+  // =====================================================
+  const API_URL = 'http://127.0.0.1:8000/api/v1';
+  const token = localStorage.getItem('access_token');
+
+  // =====================================================
+  // 1. REGISTRO Y PERFIL DE USUARIO (AUTENTICACIÓN REAL)
   // =====================================================
   const btnRegister = document.getElementById('btnRegister');
+  const navUserArea = document.getElementById('navUserArea');
   const userProfile = document.getElementById('userProfile');
+  const userName = document.getElementById('userName');
 
-  btnRegister.addEventListener('click', () => {
+  function showUserProfile(name) {
     btnRegister.classList.add('hidden');
+    if (navUserArea) navUserArea.appendChild(btnRegister);
+    userName.textContent = name || 'Usuario';
     userProfile.classList.remove('hidden');
-  });
+  }
+
+  function showLoginButton() {
+    btnRegister.classList.remove('hidden');
+    btnRegister.textContent = 'Registrarse';
+    userProfile.classList.add('hidden');
+    userName.textContent = 'Santiago López';
+  }
+
+  async function handleLogin() {
+    const email = prompt('Correo electrónico:');
+    if (!email) return;
+    const password = prompt('Contraseña:');
+    if (!password) return;
+
+    try {
+      const res = await fetch(`${API_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password })
+      });
+
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        alert(`Error de autenticación: ${err.detail || 'Credenciales inválidas'}`);
+        return;
+      }
+
+      const data = await res.json();
+      localStorage.setItem('access_token', data.access_token);
+
+      // Obtener nombre del usuario
+      const yoRes = await fetch(`${API_URL}/auth/yo`, {
+        headers: { 'Authorization': `Bearer ${data.access_token}` }
+      });
+      if (yoRes.ok) {
+        const user = await yoRes.json();
+        showUserProfile(user.nombre || user.email || 'Usuario');
+      } else {
+        showUserProfile(email);
+      }
+
+      btnRegister.textContent = 'Cerrar sesión';
+      btnRegister.onclick = handleLogout;
+
+    } catch (err) {
+      alert('No se pudo conectar al servidor. Verifica que el backend esté corriendo.');
+      console.error(err);
+    }
+  }
+
+  function handleLogout() {
+    localStorage.removeItem('access_token');
+    btnRegister.textContent = 'Registrarse';
+    btnRegister.onclick = handleLogin;
+    showLoginButton();
+  }
+
+  btnRegister.addEventListener('click', handleLogin);
+
+  // Verificar sesión al cargar la página
+  if (token) {
+    fetch(`${API_URL}/auth/yo`, {
+      headers: { 'Authorization': `Bearer ${token}` }
+    }).then(r => r.json()).then(user => {
+      showUserProfile(user.nombre || user.email || 'Usuario');
+      btnRegister.textContent = 'Cerrar sesión';
+      btnRegister.onclick = handleLogout;
+    }).catch(() => {
+      localStorage.removeItem('access_token');
+      showLoginButton();
+    });
+  }
 
   // =====================================================
   // 2. CARRUSEL EN EL HERO
