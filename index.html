@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <!-- Configuración básica -->
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- Título de la página -->
+    <title>SENA dajesa - Oferta Educativa</title>
+
+    <!-- Fuentes de Google -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
+
+    <!-- Archivo CSS -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+
+   
+    <!-- =====================================================
+         HEADER / MENÚ PRINCIPAL
+    ====================================================== -->
+    <header id="header">
+        <div class="container nav">
+            <a href="#inicio" class="brand">
+                <div class="sena-logo">
+                    <img src="Logo sena.png" alt="Logo SENA">
+                </div>
+                <div>
+                    <strong>SENA dajesa</strong>
+                    <span>Oferta Educativa</span>
+                </div>
+            </a>
+
+           
+
+            <nav id="mainNav">
+                <a href="#inicio">Inicio</a>
+                <a href="#programas">Programas</a>
+                <a href="#asistente-ia">Asistente IA</a>
+                <a href="#novedades">Novedades</a>
+            </nav>
+
+
+
+
+
+            <button id="themeToggle" class="theme-toggle" aria-label="Cambiar tema">
+                <span class="theme-icon-light">☀️ Claro</span>
+                <span class="theme-icon-dark">🌙 Oscuro</span>
+              </button>
+
+
+
+
+            <div class="nav-user-area" id="navUserArea">
+                
+                <button class="button button-outline-sm" id="btnRegister">Registrarse</button>
+                <div class="user-profile hidden" id="userProfile">
+                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Foto de perfil" class="user-avatar">
+                  <span class="user-name" id="userName">Santiago López</span>
+                </div>
+            </div>
+
+            <button id="menuButton" class="menu-button" type="button">☰</button>
+        </div>
+
+
+        
+    </header>
+
+    <main>
+        <!-- HERO -->
+        <section id="inicio" class="hero">
+            <div class="hero-bg-carousel">
+              <div class="carousel-track" id="carouselTrack">
+                <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&w=1920&q=80" alt="Fondo 1"></div>
+                <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&w=1920&q=80" alt="Fondo 2"></div>
+                <div class="carousel-slide"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=1920&q=80" alt="Fondo 3"></div>
+              </div>
+              <div class="hero-overlay"></div>
+            </div>
+          
+            <div class="container hero-container">
+              <div class="hero-left">
+                <div class="hero-badge"><span class="badge-dot"></span> Inscripciones abiertas 2026</div>
+                <h1 class="hero-title">Transforma tu <br><span class="highlight">futuro profesional</span></h1>
+                <p class="hero-description">Explora más de 16 programas técnicos y tecnológicos completamente gratuitos. Haz clic en cualquier programa para inscribirte directamente en Sofía Plus.</p>
+                <div class="hero-buttons">
+                  <a href="#programas" class="button button-yellow">Ver programas</a>
+                  <a href="https://oferta.senasofiaplus.edu.co/" target="_blank" rel="noopener noreferrer" class="button button-outline">Ir a Sofía Plus</a>
+                </div>
+              </div>
+              <div class="hero-right">
+                <div class="logo-circle-container">
+                  <img src="Logo sena.png" alt="Logo SENA Colombia" class="hero-logo-circle">
+                </div>
+              </div>
+            </div>
+        </section>
+
+        <!-- ESTADÍSTICAS -->
+        <section class="stats">
+            <div class="container stats-grid">
+                <div class="stat"><strong>100%</strong><span>Formación gratuita</span></div>
+                <div class="stat"><strong>16</strong><span>Programas disponibles</span></div>
+                <div class="stat"><strong>2</strong><span>Niveles de formación</span></div>
+                <div class="stat"><strong>24/7</strong><span>Orientación</span></div>
+            </div>
+        </section>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        <!-- PROGRAMAS -->
+        <section id="programas" class="programs-section">
+            <div class="container">
+                <div class="section-title">
+                    <div class="pill">Oferta educativa</div>
+                    <h2>Elige tu programa</h2>
+                    <p>Explora nuestras opciones de formación y encuentra la que mejor se adapte a ti.</p>
+                </div>
+
+                <!-- BARRA DE BÚSQUEDA Y FILTROS (Ubicada correctamente dentro del contenedor) -->
+        <div class="search-filter-container">
+            <div class="search-box">
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="Buscar programa por palabra clave (ej. Logística, Software)..."
+                    aria-label="Buscar programa"
+                >
+            </div>
+            
+            <div class="filter-group">
+                <select id="modalityFilter" aria-label="Filtrar por modalidad">
+                    <option value="">Todas las modalidades</option>
+                    <option value="presencial">Presencial</option>
+                    <option value="virtual">Virtual</option>
+                </select>
+            
+                <select id="shiftFilter" aria-label="Filtrar por jornada">
+                    <option value="">Todas las jornadas</option>
+                    <option value="diurna">Diurna</option>
+                    <option value="nocturna">Nocturna</option>
+                    <option value="mixta">Mixta</option>
+                    <option value="24 horas">24 Horas</option>
+                </select>
+            </div>
+        </div>
+
+                <div class="program-category">
+                    <button class="category-header" type="button" aria-expanded="false">
+                        <div>
+                            <span class="category-number">01</span>
+                            <div>
+                                <h3>Técnicas</h3>
+                                <p>Formación técnica para comenzar tu desarrollo profesional.</p>
+                            </div>
+                        </div>
+                        <span class="category-arrow">▼</span>
+                    </button>
+                    <div id="tecnicasBody" class="category-body"></div>
+                </div>
+
+                <div class="program-category">
+                    <button class="category-header" type="button" aria-expanded="false">
+                        <div>
+                            <span class="category-number">02</span>
+                            <div>
+                                <h3>Tecnologías</h3>
+                                <p>Formación tecnológica para especializarte profesionalmente.</p>
+                            </div>
+                        </div>
+                        <span class="category-arrow">▼</span>
+                    </button>
+                    <div id="tecnologiasBody" class="category-body"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- NOVEDADES -->
+        <section id="novedades" class="news-section">
+            <div class="container">
+              <div class="section-title text-center">
+                <span class="section-badge">Lo más reciente</span>
+                <h2>Novedades de la Semana</h2>
+                <p>Mantente al día con las últimas convocatorias, eventos y noticias destacadas del SENA.</p>
+              </div>
+              <div class="news-grid">
+                <article class="news-card">
+                  <div class="news-image"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80" alt="Convocatoria 2026"><span class="news-tag">Convocatoria</span></div>
+                  <div class="news-content"><span class="news-date">4 Sep, 2026</span><h3>Nueva Convocatoria de Formación Virtual 2026</h3><p>Se abren más de 15,000 cupos en áreas de desarrollo de software, inteligencia artificial y gestión empresarial.</p><a href="#" class="news-link">Leer más &rarr;</a></div>
+                </article>
+                <article class="news-card">
+                  <div class="news-image"><img src="https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80" alt="Bootcamp IA"><span class="news-tag highlight">Nuevo</span></div>
+                  <div class="news-content"><span class="news-date">2 Sep, 2026</span><h3>Bootcamp Gratuito en Inteligencia Artificial</h3><p>Aprende las herramientas generativas más demandadas del mercado tecnológico con certificación oficial.</p><a href="#" class="news-link">Leer más &rarr;</a></div>
+                </article>
+                <article class="news-card">
+                  <div class="news-image"><img src="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80" alt="Feria de Empleo"><span class="news-tag">Evento</span></div>
+                  <div class="news-content"><span class="news-date">28 Ago, 2026</span><h3>Feria Virtual de Empleo e Innovación</h3><p>Conecta de manera directa con empresas aliadas que buscan talento técnico y tecnológico egresado del SENA.</p><a href="#" class="news-link">Leer más &rarr;</a></div>
+                </article>
+              </div>
+            </div>
+        </section>
+
+        <!-- HERRAMIENTAS INTELIGENTES -->
+        <section id="asistente-ia" class="tools-section">
+            <div class="container">
+              <div class="section-title text-center">
+                <span class="section-badge-green">INTELIGENCIA ARTIFICIAL</span>
+                <h2>Herramientas inteligentes</h2>
+                <p>Usa nuestro asistente y el recomendador para encontrar el programa ideal para ti.</p>
+              </div>
+              <div class="tools-grid-single">
+                <div class="tool-card">
+                  <div class="card-header">
+                    <div class="icon-box green-icon">
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zM6 9h12v2H6V9zm8 5H6v-2h8v2zm4-6H6V6h12v2z"/>
+                      </svg>
+                    </div>
+                    <div>
+                      <h3>Asesor Virtual 24/7</h3>
+                      <span class="card-subtitle">Resuelve tus dudas al instante</span>
+                    </div>
+                  </div>
+                  <p class="card-description">Nuestro asistente de IA puede orientarte sobre programas, requisitos, duración, modalidades e inscripciones.</p>
+                  <ul class="feature-list">
+                    <li><span class="check-icon">✓</span> Información de programas</li>
+                    <li><span class="check-icon">✓</span> Requisitos de inscripción</li>
+                    <li><span class="check-icon">✓</span> Cómo usar Sofia Plus</li>
+                    <li><span class="check-icon">✓</span> Costos y gratuidad</li>
+                  </ul>
+                  <button class="btn-chat-now" id="btnChatearAhora">Chatear ahora &rarr;</button>
+                </div>
+              </div>
+            </div>
+        </section>
+
+        <!-- QUIZ INTERACTIVO -->
+        <section id="quiz" class="quiz-section">
+            <div class="quiz-container">
+                <div class="quiz-header">
+                    <span class="quiz-tag">ORIENTACIÓN</span>
+                    <h2>Encuentra el programa <span>ideal para ti</span></h2>
+                    <p>Responde unas preguntas y descubre qué programa del SENA puede adaptarse mejor a tus intereses.</p>
+                </div>
+                <div class="quiz-box">
+                    <div class="quiz-progress">
+                        <div class="progress-line"><div class="progress-fill" id="progressFill"></div></div>
+                        <div class="progress-steps">
+                            <span class="progress-step active">01</span>
+                            <span class="progress-step">02</span>
+                            <span class="progress-step">03</span>
+                            <span class="progress-step">04</span>
+                        </div>
+                    </div>
+                    <div class="quiz-slider" id="quizSlider">
+                        <div class="quiz-slide active">
+                            <div class="question-number">PREGUNTA 01 / 03</div>
+                            <h3>¿Qué área te interesa más?</h3>
+                            <p class="question-description">Elige el campo que más se relaciona con tus gustos e intereses.</p>
+                            <div class="answers-grid">
+                                <label class="answer-card"><input type="radio" name="interest" value="technology"><div class="answer-content"><span class="answer-icon">💻</span><span class="answer-title">Tecnología</span><span class="answer-text">Software, computadores e innovación</span></div></label>
+                                <label class="answer-card"><input type="radio" name="interest" value="business"><div class="answer-content"><span class="answer-icon">📊</span><span class="answer-title">Negocios</span><span class="answer-text">Empresas, administración y gestión</span></div></label>
+                                <label class="answer-card"><input type="radio" name="interest" value="creative"><div class="answer-content"><span class="answer-icon">🎨</span><span class="answer-title">Creatividad</span><span class="answer-text">Diseño, contenido y producción</span></div></label>
+                                <label class="answer-card"><input type="radio" name="interest" value="social"><div class="answer-content"><span class="answer-icon">🤝</span><span class="answer-title">Área social</span><span class="answer-text">Comunidad, personas y bienestar</span></div></label>
+                            </div>
+                            <div class="quiz-navigation">
+                                <span class="quiz-hint">Selecciona una opción para continuar</span>
+                                <button type="button" class="quiz-next">Siguiente <span>→</span></button>
+                            </div>
+                        </div>
+                        <div class="quiz-slide">
+                            <div class="question-number">PREGUNTA 02 / 03</div>
+                            <h3>¿Qué actividad prefieres?</h3>
+                            <p class="question-description">Piensa en el tipo de trabajo que disfrutarías realizar diariamente.</p>
+                            <div class="answers-grid">
+                                <label class="answer-card"><input type="radio" name="activity" value="computer"><div class="answer-content"><span class="answer-icon">🖥️</span><span class="answer-title">Trabajar con computadores</span><span class="answer-text">Tecnología, programas y herramientas digitales</span></div></label>
+                                <label class="answer-card"><input type="radio" name="activity" value="people"><div class="answer-content"><span class="answer-icon">👥</span><span class="answer-title">Trabajar con personas</span><span class="answer-text">Comunicación, atención y trabajo en equipo</span></div></label>
+                                <label class="answer-card"><input type="radio" name="activity" value="hands"><div class="answer-content"><span class="answer-icon">🔧</span><span class="answer-title">Trabajo práctico</span><span class="answer-text">Crear, construir y trabajar directamente</span></div></label>
+                            </div>
+                            <div class="quiz-navigation">
+                                <button type="button" class="quiz-back">← Atrás</button>
+                                <button type="button" class="quiz-next">Siguiente <span>→</span></button>
+                            </div>
+                        </div>
+                        <div class="quiz-slide">
+                            <div class="question-number">PREGUNTA 03 / 03</div>
+                            <h3>¿Qué tipo de formación prefieres?</h3>
+                            <p class="question-description">Selecciona el nivel de formación que más se adapta a tus objetivos.</p>
+                            <div class="answers-grid level-grid">
+                                <label class="answer-card"><input type="radio" name="level" value="technical"><div class="answer-content"><span class="answer-icon">🛠️</span><span class="answer-title">Técnica</span><span class="answer-text">Formación práctica para incorporarte rápidamente al mundo laboral.</span></div></label>
+                                <label class="answer-card"><input type="radio" name="level" value="technology"><div class="answer-content"><span class="answer-icon">🎓</span><span class="answer-title">Tecnológica</span><span class="answer-text">Formación más avanzada para desarrollar competencias profesionales.</span></div></label>
+                            </div>
+                            <div class="quiz-navigation">
+                                <button type="button" class="quiz-back">← Atrás</button>
+                                <button type="button" class="quiz-finish" id="recommendButton">Ver mi recomendación <span>→</span></button>
+                            </div>
+                        </div>
+                        <div class="quiz-slide quiz-result">
+                            <div class="result-icon">✨</div>
+                            <span class="result-label">TU RESULTADO</span>
+                            <h3>Tenemos una recomendación para ti</h3>
+                            <div id="recommendation" class="recommendation"></div>
+                            <button type="button" class="quiz-restart" id="restartQuiz">↻ Volver a realizar el quiz</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- CALL TO ACTION -->
+    <section class="cta-section" id="siguiente-paso">
+      <div class="container">
+          <div class="cta-content">
+              <div class="cta-text">
+                  <span class="cta-label">DA EL SIGUIENTE PASO</span>
+                  <h2>¿Listo para comenzar tu formación?</h2>
+                  <p>Encuentra el programa que más se adapte a tus intereses y comienza a construir tu futuro.</p>
+              </div>
+              <div class="cta-action">
+                  <a href="#programas" class="cta-button">Ver programas <span>→</span></a>
+              </div>
+          </div>
+      </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer id="contacto">
+      <div class="container footer-content">
+          <div class="footer-brand">
+              <a href="#inicio" class="brand">
+                  <div class="sena-logo"><img src="Logo sena.png" alt="Logo SENA"></div>
+                  <div><strong>SENA dajesa</strong><span>Oferta Educativa</span></div>
+              </a>
+              <p>Formación profesional integral para desarrollar tus habilidades y construir un mejor futuro.</p>
+          </div>
+          <div class="footer-column">
+              <h4>Navegación</h4>
+              <a href="#inicio">Inicio</a>
+              <a href="#programas">Programas</a>
+              <a href="#asistente-ia">Asistente IA</a>
+              <a href="#novedades">Novedades</a>
+          </div>
+          <div class="footer-column">
+              <h4>Formación</h4>
+              <a href="#programas">Técnicos</a>
+              <a href="#programas">Tecnólogos</a>
+              <a href="https://oferta.senasofiaplus.edu.co/sofia-oferta/buscar-oferta.html" target="_blank" rel="noopener noreferrer">Ver oferta SENA</a>
+          </div>
+          <div class="footer-column">
+              <h4>Información</h4>
+              <p class="footer-info">Plataforma de orientación y consulta de programas de formación.</p>
+              <span class="footer-status">● Inscripciones 2026</span>
+          </div>
+      </div>
+      <div class="footer-bottom">
+          <div class="container footer-bottom-content">
+              <p>© 2026 SENA dajesa. Todos los derechos reservados.</p>
+              <p>Oferta Educativa</p>
+          </div>
+      </div>
+    </footer>
+
+    <!-- =====================================================
+         CHATBOT FLOTANTE ÚNICO
+    ===================================================== -->
+    <button id="chatButton" class="chat-button" type="button" aria-label="Abrir asistente virtual">💬</button>
+
+    <div id="chatBox" class="chat-box hidden">
+        <div class="chat-header" id="chatHeader">
+            <div class="chat-header-title">
+                <span class="drag-icon">⋮⋮</span>
+                <strong>Asistente SENA dajesa</strong>
+            </div>
+            <button id="closeChat" type="button" aria-label="Cerrar chat">&times;</button>
+        </div>
+        <div id="chatMessages" class="chat-messages">
+            <div class="bot-message">
+                ¡Hola! 👋 Soy el asistente virtual de SENA dajesa. Pregúntame sobre programas, técnicas, tecnologías o inscripciones.
+            </div>
+        </div>
+        <div class="chat-input">
+            <input id="chatInput" type="text" placeholder="Escribe tu mensaje..." autocomplete="off">
+            <button id="sendMessage" type="button" aria-label="Enviar mensaje">➤</button>
+        </div>
+    </div>
+
+    <!-- Archivo JavaScript -->
+    <script src="script.js"></script>
+</body>
+</html>
