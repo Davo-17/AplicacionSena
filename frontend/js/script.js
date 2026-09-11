@@ -1,497 +1,250 @@
-document.addEventListener('DOMContentLoaded', () => {
+/* App SENA Dajesa - script principal.
+ * Código simple a propósito: 1 archivo, funciones cortas, todo en español.
+ * Secciones: API, login, programas, filtros, quiz, chat, tema.
+ */
+document.addEventListener("DOMContentLoaded", () => {
+  const API_URL = window.API_URL || "http://127.0.0.1:8000/api/v1";
 
-  // =====================================================
-  // 0. CONFIGURACIÓN DE API
-  // =====================================================
-  const API_URL = 'http://127.0.0.1:8000/api/v1';
-  const token = localStorage.getItem('access_token');
-
-  // =====================================================
-  // 1. REGISTRO Y PERFIL DE USUARIO (AUTENTICACIÓN REAL)
-  // =====================================================
-  const btnRegister = document.getElementById('btnRegister');
-  const navUserArea = document.getElementById('navUserArea');
-  const userProfile = document.getElementById('userProfile');
-  const userName = document.getElementById('userName');
-
-  function showUserProfile(name) {
-    btnRegister.classList.add('hidden');
-    if (navUserArea) navUserArea.appendChild(btnRegister);
-    userName.textContent = name || 'Usuario';
-    userProfile.classList.remove('hidden');
+  // ---------- Utilidad para pedir datos ----------
+  async function pedir(url, opciones) {
+    const res = await fetch(url, opciones);
+    if (!res.ok) throw new Error("Error " + res.status);
+    return res.json();
   }
 
-  function showLoginButton() {
-    btnRegister.classList.remove('hidden');
-    btnRegister.textContent = 'Registrarse';
-    userProfile.classList.add('hidden');
-    userName.textContent = 'Santiago López';
+  // ---------- 1. LOGIN ----------
+  const btnRegister = document.getElementById("btnRegister");
+  const userProfile = document.getElementById("userProfile");
+  const userName = document.getElementById("userName");
+
+  function mostrarUsuario(nombre) {
+    btnRegister.textContent = "Cerrar sesión";
+    btnRegister.onclick = cerrarSesion;
+    userName.textContent = nombre || "Usuario";
+    userProfile.classList.remove("hidden");
   }
 
-  async function handleLogin() {
-    const email = prompt('Correo electrónico:');
+  function mostrarBotonRegistro() {
+    btnRegister.textContent = "Registrarse";
+    btnRegister.onclick = iniciarSesion;
+    userProfile.classList.add("hidden");
+  }
+
+  async function iniciarSesion() {
+    const email = prompt("Correo electrónico:");
     if (!email) return;
-    const password = prompt('Contraseña:');
+    const password = prompt("Contraseña:");
     if (!password) return;
-
     try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
+      const data = await pedir(API_URL + "/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
       });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(`Error de autenticación: ${err.detail || 'Credenciales inválidas'}`);
-        return;
-      }
-
-      const data = await res.json();
-      localStorage.setItem('access_token', data.access_token);
-
-      // Obtener nombre del usuario
-      const yoRes = await fetch(`${API_URL}/auth/yo`, {
-        headers: { 'Authorization': `Bearer ${data.access_token}` }
+      localStorage.setItem("access_token", data.access_token);
+      const user = await pedir(API_URL + "/auth/yo", {
+        headers: { Authorization: "Bearer " + data.access_token },
       });
-      if (yoRes.ok) {
-        const user = await yoRes.json();
-        showUserProfile(user.nombre || user.email || 'Usuario');
-      } else {
-        showUserProfile(email);
-      }
-
-      btnRegister.textContent = 'Cerrar sesión';
-      btnRegister.onclick = handleLogout;
-
+      mostrarUsuario(user.nombre || user.email || email);
     } catch (err) {
-      alert('No se pudo conectar al servidor. Verifica que el backend esté corriendo.');
       console.error(err);
+      alert("No se pudo iniciar sesión. Revisa tus datos o que el backend esté corriendo.");
     }
   }
 
-  function handleLogout() {
-    localStorage.removeItem('access_token');
-    btnRegister.textContent = 'Registrarse';
-    btnRegister.onclick = handleLogin;
-    showLoginButton();
+  function cerrarSesion() {
+    localStorage.removeItem("access_token");
+    mostrarBotonRegistro();
   }
 
-  btnRegister.addEventListener('click', handleLogin);
+  btnRegister.onclick = iniciarSesion;
 
-  // Verificar sesión al cargar la página
-  if (token) {
-    fetch(`${API_URL}/auth/yo`, {
-      headers: { 'Authorization': `Bearer ${token}` }
-    }).then(r => r.json()).then(user => {
-      showUserProfile(user.nombre || user.email || 'Usuario');
-      btnRegister.textContent = 'Cerrar sesión';
-      btnRegister.onclick = handleLogout;
-    }).catch(() => {
-      localStorage.removeItem('access_token');
-      showLoginButton();
+  // Si ya había sesión, la recuperamos.
+  const tokenGuardado = localStorage.getItem("access_token");
+  if (tokenGuardado) {
+    pedir(API_URL + "/auth/yo", {
+      headers: { Authorization: "Bearer " + tokenGuardado },
+    })
+      .then((user) => mostrarUsuario(user.nombre || user.email))
+      .catch(() => {
+        localStorage.removeItem("access_token");
+        mostrarBotonRegistro();
+      });
+  }
+
+  // ---------- 2. PROGRAMAS (vienen del backend) ----------
+  async function cargarProgramas() {
+    let programas = [];
+    try {
+      programas = await pedir(API_URL + "/programas");
+    } catch (err) {
+      console.warn("Backend no disponible, uso lista vacía.", err);
+    }
+    const tecnicas = programas.filter((p) => (p.nivel || "").toLowerCase() === "tecnica");
+    const tecnologias = programas.filter((p) => (p.nivel || "").toLowerCase() === "tecnologia");
+    pintarProgramas(tecnicas.length ? tecnicas : programas.filter((_, i) => i < 3), "tecnicasBody");
+    pintarProgramas(tecnologias.length ? tecnologias : programas.filter((_, i) => i >= 3), "tecnologiasBody");
+  }
+
+  function pintarProgramas(lista, contenedorId) {
+    const contenedor = document.getElementById(contenedorId);
+    if (!contenedor) return;
+    contenedor.innerHTML = lista
+      .map(
+        (p) => `
+      <div class="program-card" data-modality="${p.modalidad || ""}" data-shift="${p.jornada || ""}">
+        <h4>${p.titulo || p.title}</h4>
+        <p>${p.descripcion || p.desc || ""}</p>
+        <a href="${p.url_sofia || p.url || "#"}" target="_blank" rel="noopener">Inscribirme →</a>
+      </div>`
+      )
+      .join("");
+  }
+
+  cargarProgramas();
+
+  // Acordeón de categorías.
+  document.querySelectorAll(".category-header").forEach((btn) => {
+    btn.addEventListener("click", () => {
+      const abierto = btn.getAttribute("aria-expanded") === "true";
+      btn.setAttribute("aria-expanded", String(!abierto));
+      btn.classList.toggle("active");
+      btn.nextElementSibling?.classList.toggle("active");
+    });
+  });
+
+  // ---------- 3. FILTROS ----------
+  const searchInput = document.getElementById("searchInput");
+  const modalityFilter = document.getElementById("modalityFilter");
+  const shiftFilter = document.getElementById("shiftFilter");
+
+  function filtrarProgramas() {
+    const texto = (searchInput?.value || "").toLowerCase().trim();
+    const mod = (modalityFilter?.value || "").toLowerCase();
+    const jornada = (shiftFilter?.value || "").toLowerCase();
+    document.querySelectorAll(".program-card").forEach((card) => {
+      const coincideTexto = card.textContent.toLowerCase().includes(texto);
+      const coincideMod = !mod || (card.dataset.modality || "").toLowerCase() === mod;
+      const coincideShift = !jornada || (card.dataset.shift || "").toLowerCase() === jornada;
+      const visible = coincideTexto && coincideMod && coincideShift;
+      card.classList.toggle("hidden", !visible);
     });
   }
+  searchInput?.addEventListener("input", filtrarProgramas);
+  modalityFilter?.addEventListener("change", filtrarProgramas);
+  shiftFilter?.addEventListener("change", filtrarProgramas);
 
-  // =====================================================
-  // 2. CARRUSEL EN EL HERO
-  // =====================================================
-  const track = document.getElementById('carouselTrack');
-  let currentSlide = 0;
-  const totalSlides = 3;
-
+  // ---------- 4. CARRUSEL ----------
+  const track = document.getElementById("carouselTrack");
+  let slide = 0;
   setInterval(() => {
-    currentSlide = (currentSlide + 1) % totalSlides;
-    if (track) {
-      track.style.transform = `translateX(-${currentSlide * 33.333}%)`;
-    }
+    slide = (slide + 1) % 3;
+    if (track) track.style.transform = `translateX(-${slide * 33.333}%)`;
   }, 4000);
 
-  // =====================================================
-  // 3. CARGA DINÁMICA DE PROGRAMAS Y DESPLEGABLES
-  // =====================================================
-  const tecnicasData = [
-    { title: "Técnico en Sistemas", desc: "Mantenimiento de equipos y redes de cómputo.", url: "https://oferta.senasofiaplus.edu.co/" },
-    { title: "Técnico en Programación de Software", desc: "Lógica de programación y bases de datos.", url: "https://oferta.senasofiaplus.edu.co/" },
-    { title: "Técnico en Contabilización", desc: "Operaciones comerciales y financieras.", url: "https://oferta.senasofiaplus.edu.co/" }
-  ];
+  // ---------- 5. QUIZ ----------
+  const slides = document.querySelectorAll("#quizSlider .quiz-slide");
+  const progressFill = document.getElementById("progressFill");
+  const pasos = document.querySelectorAll(".progress-step");
+  let pasoActual = 0;
 
-  const tecnologiasData = [
-    { title: "Análisis y Desarrollo de Software (ADSO)", desc: "Construcción completa de soluciones web y móviles.", url: "https://oferta.senasofiaplus.edu.co/" },
-    { title: "Gestión Empresarial", desc: "Administración y coordinación de proyectos corporativos.", url: "https://oferta.senasofiaplus.edu.co/" },
-    { title: "Diseño y Desarrollo de Redes", desc: "Infraestructura, redes y ciberseguridad.", url: "https://oferta.senasofiaplus.edu.co/" }
-  ];
-
-  function renderPrograms(data, targetContainerId) {
-    const container = document.getElementById(targetContainerId);
-    if (!container) return;
-    
-    container.innerHTML = data.map(item => `
-      <div class="program-card">
-        <h4>${item.title}</h4>
-        <p>${item.desc}</p>
-        <a href="${item.url}" target="_blank" rel="noopener noreferrer">Inscribirme →</a>
-      </div>
-    `).join('');
+  function pintarQuiz() {
+    slides.forEach((s, i) => s.classList.toggle("active", i === pasoActual));
+    pasos.forEach((p, i) => p.classList.toggle("active", i <= pasoActual));
+    if (progressFill) progressFill.style.width = ((pasoActual + 1) / 3) * 100 + "%";
   }
 
-  renderPrograms(tecnicasData, 'tecnicasBody');
-  renderPrograms(tecnologiasData, 'tecnologiasBody');
-
-  // Control de desplegables (Acordeón)
-  const categoryHeaders = document.querySelectorAll('.category-header');
-  categoryHeaders.forEach(header => {
-    header.addEventListener('click', () => {
-      const isExpanded = header.getAttribute('aria-expanded') === 'true';
-      header.setAttribute('aria-expanded', !isExpanded);
-      header.classList.toggle('active');
-      
-      const body = header.nextElementSibling;
-      if (body) {
-        body.classList.toggle('active');
+  document.querySelectorAll(".quiz-next").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (pasoActual < slides.length - 1) {
+        pasoActual++;
+        pintarQuiz();
       }
-    });
+    })
+  );
+  document.querySelectorAll(".quiz-back").forEach((b) =>
+    b.addEventListener("click", () => {
+      if (pasoActual > 0) {
+        pasoActual--;
+        pintarQuiz();
+      }
+    })
+  );
+
+  document.getElementById("recommendButton")?.addEventListener("click", () => {
+    const interes = document.querySelector('input[name="interest"]:checked')?.value;
+    const nivel = document.querySelector('input[name="level"]:checked')?.value;
+    let texto = "Programa recomendado: ";
+    if (interes === "technology" && nivel === "technology") texto += "Tecnología en Análisis y Desarrollo de Software (ADSO)";
+    else if (interes === "technology") texto += "Técnico en Programación de Software";
+    else if (interes === "business") texto += "Tecnología en Gestión Empresarial";
+    else texto += "Técnico en Integración de Operaciones Logísticas";
+    document.getElementById("recommendation").textContent = texto;
+    pasoActual = 3;
+    pintarQuiz();
+  });
+  document.getElementById("restartQuiz")?.addEventListener("click", () => {
+    pasoActual = 0;
+    pintarQuiz();
   });
 
-  // =====================================================
-  // 4. QUIZ INTERACTIVO
-  // =====================================================
-  const slides = document.querySelectorAll('#quizSlider .quiz-slide');
-  const progressFill = document.getElementById('progressFill');
-  const stepIndicators = document.querySelectorAll('.progress-step');
-  let currentStep = 0;
+  // ---------- 6. CHAT (conectado al backend) ----------
+  const chatButton = document.getElementById("chatButton");
+  const chatBox = document.getElementById("chatBox");
+  const closeChat = document.getElementById("closeChat");
+  const chatInput = document.getElementById("chatInput");
+  const sendMessage = document.getElementById("sendMessage");
+  const chatMessages = document.getElementById("chatMessages");
 
-  function updateQuizUI() {
-    slides.forEach((slide, idx) => {
-      slide.classList.toggle('active', idx === currentStep);
-    });
+  function abrirChat() {
+    chatBox.classList.remove("hidden");
+  }
+  chatButton.addEventListener("click", () => chatBox.classList.toggle("hidden"));
+  closeChat.addEventListener("click", () => chatBox.classList.add("hidden"));
+  document.getElementById("btnChatearAhora")?.addEventListener("click", abrirChat);
 
-    stepIndicators.forEach((indicator, idx) => {
-      indicator.classList.toggle('active', idx <= currentStep);
-    });
-
-    if (progressFill) {
-      const percentage = ((currentStep + 1) / 3) * 100;
-      progressFill.style.width = `${percentage}%`;
+  async function enviarMensaje() {
+    const texto = chatInput.value.trim();
+    if (!texto) return;
+    agregarBurbuja(texto, "user-message");
+    chatInput.value = "";
+    try {
+      const data = await pedir(API_URL + "/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mensaje: texto }),
+      });
+      agregarBurbuja(data.respuesta, "bot-message");
+    } catch (err) {
+      console.warn(err);
+      agregarBurbuja("Estoy sin conexión al servidor, pero puedes ver los programas o ir a Sofia Plus.", "bot-message");
     }
   }
 
-  document.querySelectorAll('.quiz-next').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (currentStep < slides.length - 1) {
-        currentStep++;
-        updateQuizUI();
-      }
-    });
-  });
-
-  document.querySelectorAll('.quiz-back').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (currentStep > 0) {
-        currentStep--;
-        updateQuizUI();
-      }
-    });
-  });
-
-  const recommendButton = document.getElementById('recommendButton');
-  const recommendationBox = document.getElementById('recommendation');
-
-  if (recommendButton) {
-    recommendButton.addEventListener('click', () => {
-      const interest = document.querySelector('input[name="interest"]:checked')?.value;
-      const level = document.querySelector('input[name="level"]:checked')?.value;
-
-      let resultText = "Programa recomendado: ";
-      if (interest === "technology" && level === "technology") {
-        resultText += "Tecnología en Análisis y Desarrollo de Software (ADSO)";
-      } else if (interest === "technology" && level === "technical") {
-        resultText += "Técnico en Programación de Software";
-      } else if (interest === "business") {
-        resultText += "Tecnología en Gestión Empresarial";
-      } else {
-        resultText += "Técnico en Integración de Operaciones Logísticas";
-      }
-
-      recommendationBox.textContent = resultText;
-      currentStep = 3; // Ir a la pantalla de resultados
-      updateQuizUI();
-    });
-  }
-
-  const restartQuiz = document.getElementById('restartQuiz');
-  if (restartQuiz) {
-    restartQuiz.addEventListener('click', () => {
-      currentStep = 0;
-      updateQuizUI();
-    });
-  }
-
-  // =====================================================
-  // 5. CHATBOT FLOTANTE
-  // =====================================================
-  const chatButton = document.getElementById('chatButton');
-  const chatBox = document.getElementById('chatBox');
-  const closeChat = document.getElementById('closeChat');
-  const btnChatearAhora = document.getElementById('btnChatearAhora');
-  const chatInput = document.getElementById('chatInput');
-  const sendMessage = document.getElementById('sendMessage');
-  const chatMessages = document.getElementById('chatMessages');
-
-  function openChat() {
-    chatBox.classList.remove('hidden');
-  }
-
-  function closeChatBox() {
-    chatBox.classList.add('hidden');
-  }
-
-  chatButton.addEventListener('click', () => {
-    chatBox.classList.contains('hidden') ? openChat() : closeChatBox();
-  });
-
-  closeChat.addEventListener('click', closeChatBox);
-  if (btnChatearAhora) {
-    btnChatearAhora.addEventListener('click', openChat);
-  }
-
-  function handleUserSendMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    // Agregar mensaje del usuario
-    const userMsg = document.createElement('div');
-    userMsg.className = 'user-message';
-    userMsg.textContent = text;
-    chatMessages.appendChild(userMsg);
-
-    chatInput.value = '';
+  function agregarBurbuja(texto, clase) {
+    const div = document.createElement("div");
+    div.className = clase;
+    div.textContent = texto;
+    chatMessages.appendChild(div);
     chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    // Respuesta del Bot
-    setTimeout(() => {
-      const botMsg = document.createElement('div');
-      botMsg.className = 'bot-message';
-      botMsg.textContent = "Gracias por tu mensaje. Para obtener detalles sobre inscripciones o cursos, consulta la sección de Oferta Educativa o visita Sofia Plus.";
-      chatMessages.appendChild(botMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 800);
   }
 
-  sendMessage.addEventListener('click', handleUserSendMessage);
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleUserSendMessage();
-  });
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-// =====================================================
-  // 5. CHATBOT FLOTANTE Y ARRASTRABLE (DRAGGABLE)
-  // =====================================================
-  const chatButton = document.getElementById('chatButton');
-  const chatBox = document.getElementById('chatBox');
-  const closeChat = document.getElementById('closeChat');
-  const btnChatearAhora = document.getElementById('btnChatearAhora');
-  const chatInput = document.getElementById('chatInput');
-  const sendMessage = document.getElementById('sendMessage');
-  const chatMessages = document.getElementById('chatMessages');
-  const chatHeader = document.getElementById('chatHeader');
-
-
-  chatButton.addEventListener('click', () => {
-    chatBox.classList.remove('hidden');
-});
-
-closeChat.addEventListener('click', () => {
-    chatBox.classList.add('hidden');
-});
-
-
-  function openChat() {
-    chatBox.classList.remove('hidden');
-  }
-
-  function closeChatBox() {
-    chatBox.classList.add('hidden');
-  }
-
-  chatButton.addEventListener('click', () => {
-    chatBox.classList.contains('hidden') ? openChat() : closeChatBox();
+  sendMessage.addEventListener("click", enviarMensaje);
+  chatInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") enviarMensaje();
   });
 
-  closeChat.addEventListener('click', closeChatBox);
-  if (btnChatearAhora) {
-    btnChatearAhora.addEventListener('click', openChat);
-  }
-
-  function handleUserSendMessage() {
-    const text = chatInput.value.trim();
-    if (!text) return;
-
-    const userMsg = document.createElement('div');
-    userMsg.className = 'user-message';
-    userMsg.textContent = text;
-    chatMessages.appendChild(userMsg);
-
-    chatInput.value = '';
-    chatMessages.scrollTop = chatMessages.scrollHeight;
-
-    setTimeout(() => {
-      const botMsg = document.createElement('div');
-      botMsg.className = 'bot-message';
-      botMsg.textContent = "Gracias por tu mensaje. Para obtener detalles sobre inscripciones o cursos, consulta la sección de Oferta Educativa o visita Sofia Plus.";
-      chatMessages.appendChild(botMsg);
-      chatMessages.scrollTop = chatMessages.scrollHeight;
-    }, 800);
-  }
-
-  sendMessage.addEventListener('click', handleUserSendMessage);
-  chatInput.addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') handleUserSendMessage();
+  // ---------- 7. TEMA CLARO/OSCURO ----------
+  const themeToggle = document.getElementById("themeToggle");
+  if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
+  themeToggle?.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    const oscuro = document.body.classList.contains("dark-mode");
+    localStorage.setItem("theme", oscuro ? "dark" : "light");
   });
 
-  // LÓGICA PARA ARRASTRAR EL CHATBOT (DRAG & DROP)
-  let isDragging = false;
-  let offsetX = 0;
-  let offsetY = 0;
-
-  if (chatHeader && chatBox) {
-    chatHeader.addEventListener('mousedown', (e) => {
-      // Evitar que el clic de cerrar el chat active el arrastre
-      if (e.target === closeChat) return;
-
-      isDragging = true;
-      const rect = chatBox.getBoundingClientRect();
-      
-      // Calcular la posición relativa del ratón dentro de la ventana del chat
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-
-      // Cambiar posicionamiento a la coordenada fija exacta al iniciar arrastre
-      chatBox.style.bottom = 'auto';
-      chatBox.style.right = 'auto';
-      chatBox.style.left = `${rect.left}px`;
-      chatBox.style.top = `${rect.top}px`;
-
-      document.body.style.userSelect = 'none'; // Evitar selección global de texto al arrastrar
-    });
-
-    document.addEventListener('mousemove', (e) => {
-      if (!isDragging) return;
-
-      let newLeft = e.clientX - offsetX;
-      let newTop = e.clientY - offsetY;
-
-      // Delimitar dentro de los bordes de la ventana
-      const maxLeft = window.innerWidth - chatBox.offsetWidth;
-      const maxTop = window.innerHeight - chatBox.offsetHeight;
-
-      newLeft = Math.max(0, Math.min(newLeft, maxLeft));
-      newTop = Math.max(0, Math.min(newTop, maxTop));
-
-      chatBox.style.left = `${newLeft}px`;
-      chatBox.style.top = `${newTop}px`;
-    });
-
-    document.addEventListener('mouseup', () => {
-      if (isDragging) {
-        isDragging = false;
-        document.body.style.userSelect = ''; // Restaurar la selección normal de texto
-      }
-    });
-  }
-
-
-  
-
-
-
-
-
-
-
-
-
-  
-
-
-
-
-// Manejo de tema claro/oscuro
-const themeToggle = document.getElementById('themeToggle');
-if (themeToggle) {
-  if (localStorage.getItem('theme') === 'dark') {
-    document.body.classList.add('dark-mode');
-  }
-
-  themeToggle.addEventListener('click', () => {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+  // Menú móvil.
+  document.getElementById("menuButton")?.addEventListener("click", () => {
+    document.getElementById("mainNav")?.classList.toggle("open");
   });
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// =====================================================
-// FILTRADO EN TIEMPO REAL DE PROGRAMAS
-// =====================================================
-document.addEventListener('DOMContentLoaded', () => {
-  const searchInput = document.getElementById('searchInput');
-  const modalityFilter = document.getElementById('modalityFilter');
-  const shiftFilter = document.getElementById('shiftFilter');
-  const programCards = document.querySelectorAll('.program-card');
-
-  if (!searchInput || !programCards.length) return;
-
-  function filterPrograms() {
-    const query = searchInput.value.toLowerCase().trim();
-    const selectedModality = modalityFilter.value.toLowerCase();
-    const selectedShift = shiftFilter.value.toLowerCase();
-
-    programCards.forEach(card => {
-      const text = card.textContent.toLowerCase();
-      const cardModality = (card.dataset.modality || '').toLowerCase();
-      const cardShift = (card.dataset.shift || '').toLowerCase();
-
-      const matchesSearch = text.includes(query);
-      const matchesModality = !selectedModality || cardModality === selectedModality;
-      const matchesShift = !selectedShift || cardShift === selectedShift;
-
-      if (matchesSearch && matchesModality && matchesShift) {
-        card.classList.remove('hidden');
-      } else {
-        card.classList.add('hidden');
-      }
-    });
-  }
-
-  searchInput.addEventListener('input', filterPrograms);
-  modalityFilter.addEventListener('change', filterPrograms);
-  shiftFilter.addEventListener('change', filterPrograms);
 });

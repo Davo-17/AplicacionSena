@@ -11,7 +11,16 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next: object) -> Response:
         """Intercepta la respuesta y le inyecta las cabeceras seguras."""
         response = await call_next(request)  # type: ignore[operator]
-        response.headers["Content-Security-Policy"] = "default-src 'self'"
+        # CSP relajado para demo: permite Google Fonts e imágenes externas
+        # (Unsplash). En producción se endurece a 'self'.
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' https: data:; "
+            "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "font-src 'self' https://fonts.gstatic.com; "
+            "script-src 'self'; "
+            "connect-src 'self' https://*.supabase.co"
+        )
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
         response.headers["X-Frame-Options"] = "DENY"
         response.headers["X-Content-Type-Options"] = "nosniff"
