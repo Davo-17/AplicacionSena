@@ -36,13 +36,19 @@ drop policy if exists "demo lectura" on novedades;
 create policy "demo lectura" on novedades for select to anon using (true);
 drop policy if exists "demo escritura" on novedades;
 create policy "demo escritura" on novedades for insert to anon with check (true);
+drop policy if exists "demo borrado" on novedades;
+create policy "demo borrado" on novedades for delete to anon using (true);
 
 drop policy if exists "demo lectura" on fichas;
 create policy "demo lectura" on fichas for select to anon using (true);
 drop policy if exists "demo escritura" on fichas;
 create policy "demo escritura" on fichas for insert to anon with check (true);
+drop policy if exists "demo borrado" on fichas;
+create policy "demo borrado" on fichas for delete to anon using (true);
 
 drop policy if exists "demo lectura" on postulaciones;
 create policy "demo lectura" on postulaciones for select to anon using (true);
 drop policy if exists "demo escritura" on postulaciones;
 create policy "demo escritura" on postulaciones for insert to anon with check (true);
+drop policy if exists "demo borrado" on postulaciones;
+create policy "demo borrado" on postulaciones for delete to anon using (true);

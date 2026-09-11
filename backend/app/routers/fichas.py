@@ -25,15 +25,16 @@ class FichaIn(BaseModel):
 
 @router.get("")
 def listar_fichas() -> list[dict]:
-    """Devuelve las fichas (de Supabase, o las demo si falla)."""
+    """Devuelve las fichas de Supabase (aunque estén vacías).
+
+    Los datos demo solo se usan si Supabase falla, para la demo offline.
+    """
     try:
         cliente = get_supabase_anon_client()
         resp = cliente.table("fichas").select("*").limit(50).execute()
-        if resp.data:
-            return list(resp.data)
+        return list(resp.data or [])
     except Exception:
-        pass
-    return FICHAS_DEMO
+        return FICHAS_DEMO
 
 
 @router.post("", status_code=201)

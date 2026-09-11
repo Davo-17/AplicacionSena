@@ -26,15 +26,16 @@ class NovedadIn(BaseModel):
 
 @router.get("")
 def listar_novedades() -> list[dict]:
-    """Devuelve las novedades (de Supabase, o las demo si falla)."""
+    """Devuelve las novedades de Supabase (aunque estén vacías).
+
+    Los datos demo solo se usan si Supabase falla, para la demo offline.
+    """
     try:
         cliente = get_supabase_anon_client()
         resp = cliente.table("novedades").select("*").limit(20).execute()
-        if resp.data:
-            return list(resp.data)
+        return list(resp.data or [])
     except Exception:
-        pass
-    return NOVEDADES_DEMO
+        return NOVEDADES_DEMO
 
 
 @router.post("", status_code=201)

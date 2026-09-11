@@ -27,15 +27,16 @@ class PostulacionIn(BaseModel):
 
 @router.get("")
 def listar_postulaciones() -> list[dict]:
-    """Devuelve las postulaciones (de Supabase, o las demo si falla)."""
+    """Devuelve las postulaciones de Supabase (aunque estén vacías).
+
+    Los datos demo solo se usan si Supabase falla, para la demo offline.
+    """
     try:
         cliente = get_supabase_anon_client()
         resp = cliente.table("postulaciones").select("*").limit(50).execute()
-        if resp.data:
-            return list(resp.data)
+        return list(resp.data or [])
     except Exception:
-        pass
-    return POSTULACIONES_DEMO
+        return POSTULACIONES_DEMO
 
 
 @router.post("", status_code=201)
