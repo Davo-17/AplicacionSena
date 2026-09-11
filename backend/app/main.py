@@ -14,6 +14,7 @@ from pathlib import Path
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -56,6 +57,13 @@ def crear_app() -> FastAPI:
     # --- Frontend en la misma URL (demo sin CORS) ---
     # backend/ está al lado de frontend/, así que subimos un nivel.
     frontend_dir = Path(__file__).resolve().parent.parent.parent / "frontend"
+    favicon_path = frontend_dir / "assets" / "logo-sena.png"
+    if favicon_path.exists():
+
+        @app.get("/favicon.ico", include_in_schema=False)
+        async def favicon() -> FileResponse:
+            return FileResponse(favicon_path, media_type="image/png")
+
     if frontend_dir.exists():
         app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")
 
