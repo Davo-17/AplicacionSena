@@ -23,7 +23,7 @@ from app.middlewares.audit import AuditMiddleware
 from app.middlewares.error_handler import registrar_manejadores
 from app.middlewares.rate_limit import limiter
 from app.middlewares.security_headers import SecurityHeadersMiddleware
-from app.routers import auth, chat, health, programas
+from app.routers import auth, chat, fichas, health, novedades, postulaciones, programas
 
 
 def crear_app() -> FastAPI:
@@ -49,6 +49,9 @@ def crear_app() -> FastAPI:
     app.include_router(auth.router, prefix=settings.api_prefix)
     app.include_router(programas.router, prefix=settings.api_prefix)
     app.include_router(chat.router, prefix=settings.api_prefix)
+    app.include_router(novedades.router, prefix=settings.api_prefix)
+    app.include_router(fichas.router, prefix=settings.api_prefix)
+    app.include_router(postulaciones.router, prefix=settings.api_prefix)
 
     # --- Frontend en la misma URL (demo sin CORS) ---
     # backend/ está al lado de frontend/, así que subimos un nivel.

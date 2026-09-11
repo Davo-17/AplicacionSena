@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SENA Dajesa - Panel</title>
+    <link rel="stylesheet" href="css/style.css">
+    <style>
+        .admin-grid { display: grid; gap: 1.5rem; margin: 2rem 0; }
+        .admin-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 1.5rem; }
+        body.dark-mode .admin-card { background: #1f2937; border-color: #374151; }
+        .admin-card h3 { margin-top: 0; }
+        .admin-form { display: grid; gap: .6rem; margin-bottom: 1rem; }
+        .admin-form input, .admin-form textarea, .admin-form select {
+            padding: .55rem .7rem; border: 1px solid #d1d5db; border-radius: 8px; font: inherit;
+        }
+        .admin-form .row { display: grid; grid-template-columns: 1fr 1fr; gap: .6rem; }
+        .admin-list { list-style: none; padding: 0; margin: 0; display: grid; gap: .5rem; }
+        .admin-list li { padding: .6rem .8rem; background: #f9fafb; border-radius: 8px; font-size: .92rem; }
+        body.dark-mode .admin-list li { background: #111827; }
+        .admin-list small { color: #6b7280; }
+        .admin-msg { min-height: 1.2em; font-size: .9rem; color: #b45309; }
+        table.admin-table { width: 100%; border-collapse: collapse; font-size: .92rem; }
+        table.admin-table th, table.admin-table td { text-align: left; padding: .5rem; border-bottom: 1px solid #e5e7eb; }
+    </style>
+</head>
+<body>
+    <header id="header">
+        <div class="container nav">
+            <a href="index.html" class="brand">
+                <div class="sena-logo"><img src="assets/logo-sena.png" alt="Logo SENA"></div>
+                <div><strong>SENA Dajesa</strong><span>Panel</span></div>
+            </a>
+            <div class="nav-user-area">
+                <span class="user-name" id="adminName">...</span>
+                <button class="button button-outline-sm" id="btnSalir">Salir</button>
+            </div>
+        </div>
+    </header>
+
+    <main class="container">
+        <div class="section-title">
+            <div class="pill">Zona privada</div>
+            <h2>Gestión de contenido</h2>
+            <p>Publica novedades, organiza fichas y abre postulaciones.</p>
+        </div>
+
+        <div class="admin-grid">
+            <!-- NOVEDADES -->
+            <section class="admin-card">
+                <h3>📰 Novedades de la semana</h3>
+                <form class="admin-form" id="formNovedad">
+                    <input id="novTitulo" placeholder="Título *" required maxlength="120">
+                    <div class="row">
+                        <input id="novEtiqueta" placeholder="Etiqueta (Convocatoria, Nuevo, Evento)" maxlength="30">
+                        <input id="novFecha" placeholder="Fecha (4 Sep, 2026)" maxlength="30">
+                    </div>
+                    <textarea id="novDesc" placeholder="Descripción *" required maxlength="500" rows="2"></textarea>
+                    <button class="button button-yellow" type="submit">Publicar novedad</button>
+                </form>
+                <p class="admin-msg" id="msgNovedad"></p>
+                <ul class="admin-list" id="listaNovedades"></ul>
+            </section>
+
+            <!-- FICHAS -->
+            <section class="admin-card">
+                <h3>📋 Fichas</h3>
+                <form class="admin-form" id="formFicha">
+                    <div class="row">
+                        <input id="ficNumero" placeholder="Número de ficha * (ej 2981234)" required maxlength="20">
+                        <input id="ficJornada" placeholder="Jornada * (Diurna/Nocturna)" required maxlength="30">
+                    </div>
+                    <input id="ficPrograma" placeholder="Programa * (ej ADSO)" required maxlength="120">
+                    <button class="button button-yellow" type="submit">Guardar ficha</button>
+                </form>
+                <p class="admin-msg" id="msgFicha"></p>
+                <table class="admin-table">
+                    <thead><tr><th>Ficha</th><th>Programa</th><th>Jornada</th></tr></thead>
+                    <tbody id="listaFichas"></tbody>
+                </table>
+            </section>
+
+            <!-- POSTULACIONES -->
+            <section class="admin-card">
+                <h3>🎓 Postulaciones</h3>
+                <form class="admin-form" id="formPostulacion">
+                    <input id="posTitulo" placeholder="Título * (ej Curso de Liderazgo)" required maxlength="120">
+                    <div class="row">
+                        <input id="posCupos" type="number" min="1" max="10000" placeholder="Cupos *" required>
+                        <input id="posCierre" placeholder="Cierre (30 Sep, 2026)" maxlength="30">
+                    </div>
+                    <textarea id="posDesc" placeholder="Descripción *" required maxlength="500" rows="2"></textarea>
+                    <button class="button button-yellow" type="submit">Abrir postulación</button>
+                </form>
+                <p class="admin-msg" id="msgPostulacion"></p>
+                <ul class="admin-list" id="listaPostulaciones"></ul>
+            </section>
+        </div>
+    </main>
+
+    <script src="js/config.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>

@@ -17,11 +17,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const userProfile = document.getElementById("userProfile");
   const userName = document.getElementById("userName");
 
-  function mostrarUsuario(nombre) {
+  function mostrarUsuario(nombre, rol) {
     btnRegister.textContent = "Cerrar sesión";
     btnRegister.onclick = cerrarSesion;
     userName.textContent = nombre || "Usuario";
     userProfile.classList.remove("hidden");
+    // Solo el admin ve el acceso al panel. Los demás ni se enteran.
+    if (rol === "administrador" && !document.getElementById("btnPanel")) {
+      const link = document.createElement("a");
+      link.id = "btnPanel";
+      link.href = "admin.html";
+      link.className = "button button-outline-sm";
+      link.textContent = "Panel";
+      btnRegister.before(link);
+    }
   }
 
   // Sin sesión: mandamos a la página de login (frontend/login.html),
@@ -39,6 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function cerrarSesion() {
     localStorage.removeItem("access_token");
+    document.getElementById("btnPanel")?.remove();
     mostrarBotonRegistro();
   }
 
@@ -50,7 +60,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pedir(API_URL + "/auth/yo", {
       headers: { Authorization: "Bearer " + tokenGuardado },
     })
-      .then((user) => mostrarUsuario(user.nombre || user.email))
+      .then((user) => mostrarUsuario(user.nombre || user.email, user.rol))
       .catch(() => {
         localStorage.removeItem("access_token");
         mostrarBotonRegistro();
@@ -87,6 +97,25 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   cargarProgramas();
+
+  // ---------- 2b. NOVEDADES (vienen del backend, las publica el admin) ----------
+  async function cargarNovedades() {
+    const grid = document.getElementById("newsGrid");
+    if (!grid) return;
+    try {
+      const novedades = await pedir(API_URL + "/novedades");
+      if (!novedades.length) return; // sin datos: se quedan las fijas del HTML
+      grid.innerHTML = novedades.slice(0, 3).map((n) => `
+        <article class="news-card">
+          <div class="news-image"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80" alt=""><span class="news-tag">${n.etiqueta || "Noticia"}</span></div>
+          <div class="news-content"><span class="news-date">${n.fecha || ""}</span><h3>${n.titulo}</h3><p>${n.descripcion || ""}</p></div>
+        </article>`).join("");
+    } catch (err) {
+      console.warn("Novedades offline, muestro las fijas.", err);
+    }
+  }
+
+  cargarNovedades();
 
   // Acordeón de categorías.
   document.querySelectorAll(".category-header").forEach((btn) => {

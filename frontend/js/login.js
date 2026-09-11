@@ -184,17 +184,39 @@ function loginCorrecto() {
 
 
     /*
-        Ya hay token guardado: mostramos el éxito
-        y volvemos a la página principal,
-        que leerá la sesión desde localStorage.
+        Ya hay token guardado: preguntamos quién es
+        y el sistema decide a dónde llevarlo.
+        El usuario nunca elige ni ve si es admin o no.
     */
 
-    setTimeout(() => {
+    const token =
+        localStorage.getItem("access_token");
 
-        window.location.href =
-            "index.html";
+    fetch(API_URL + "/auth/yo", {
 
-    }, 900);
+        headers: {
+            "Authorization": "Bearer " + token
+        }
+
+    })
+    .then((res) => res.json())
+    .then((yo) => {
+
+        if (
+            yo &&
+            yo.rol === "administrador"
+        ) {
+            window.location.href = "admin.html";
+        } else {
+            window.location.href = "index.html";
+        }
+
+    })
+    .catch(() => {
+
+        window.location.href = "index.html";
+
+    });
 
 }
 
@@ -210,7 +232,7 @@ function loginIncorrecto() {
     loginButton.classList.remove("loading");
 
     buttonText.textContent =
-        "Ingresar al panel";
+        "Ingresar";
 
     errorMessage.classList.add("show");
 
