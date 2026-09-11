@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Administrativo SENA</title>
+
+    <link rel="stylesheet" href="css/login.css">
+</head>
+
+<body>
+
+    <main class="login-container">
+
+        <!-- PANEL IZQUIERDO -->
+        <section class="left-panel">
+
+            <canvas id="particles"></canvas>
+
+            <!-- Marca superior -->
+            <div class="brand slide-left">
+                <div class="brand-icon">
+                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                        <path d="M8 1L1 5v6l7 4 7-4V5L8 1z"
+                              stroke="white"
+                              stroke-width="1.4"
+                              stroke-linejoin="round"/>
+                        <path d="M1 5l7 4 7-4M8 9v5"
+                              stroke="white"
+                              stroke-width="1.4"/>
+                    </svg>
+                </div>
+
+                <span>PORTAL ADMINISTRATIVO</span>
+            </div>
+
+
+            <!-- CONTENIDO -->
+            <div class="left-content">
+
+            <!-- LOGO -->
+<div class="logo-wrapper slide-left">
+
+    <div class="logo-ring"></div>
+    <div class="logo-ring-middle"></div>
+
+    <div class="logo-circle">
+        <img src="assets/logos.png" alt="Logo SENA" class="logo-sena-png">
+    </div>
+
+    <div class="orbit-dot"></div>
+
+</div>
+
+                <!-- TITULO -->
+                <div class="presentation slide-left">
+
+                    <h1>SENA</h1>
+
+                    <div class="animated-title">
+                        <span id="typewriter"></span>
+                        <span class="cursor"></span>
+                    </div>
+
+                    <p>
+                        Acceso exclusivo para personal autorizado del
+                        Servicio Nacional de Aprendizaje.
+                    </p>
+
+                </div>
+
+
+                <!-- CARACTERISTICAS -->
+                <div class="features">
+
+                    <div class="feature">
+                        <span>📋</span>
+                        <p>Gestión centralizada de programas</p>
+                    </div>
+
+                    <div class="feature">
+                        <span>✏️</span>
+                        <p>Crear, editar y publicar contenido</p>
+                    </div>
+
+                    <div class="feature">
+                        <span>📊</span>
+                        <p>Estadísticas de oferta formativa</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- PARTE INFERIOR -->
+            <div class="system-status">
+                <span></span>
+                <p>Sistema activo · Colombia 2026</p>
+            </div>
+
+            <div class="decorative decorative-one"></div>
+            <div class="decorative decorative-two"></div>
+
+        </section>
+
+
+        <!-- PANEL DERECHO -->
+        <section class="right-panel">
+
+            <div class="login-card" id="loginCard">
+
+                <!-- ENCABEZADO -->
+                <div class="card-header">
+
+                    <!-- Logo móvil -->
+                    <div class="mobile-logo">
+                     <img src="assets/logos.png" alt="Logo SENA" class="logo-mobile-png">
+
+                
+                    </div>
+
+
+                    <div class="header-content">
+
+                        <div>
+
+                            <div class="active-badge">
+                                <span></span>
+                                Sistema activo
+                            </div>
+
+                            <h2>Iniciar sesión</h2>
+
+                            <p>Personal administrativo SENA</p>
+
+                        </div>
+
+                        <div class="small-logo">
+                                <img src="assets/logos.png" alt="Logo SENA" class="logo-small-png">
+
+                          
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+                <!-- FORMULARIO -->
+                <form id="loginForm" class="login-form">
+
+                    <!-- USUARIO -->
+                    <div class="form-group">
+
+                        <label>CORREO</label>
+
+                        <div class="input-container">
+
+                            <div class="input-icon">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <circle cx="8" cy="5" r="3"
+                                            stroke="currentColor"
+                                            stroke-width="1.5"/>
+                                    <path d="M2 14c0-3.314 2.686-5 6-5s6 1.686 6 5"
+                                          stroke="currentColor"
+                                          stroke-width="1.5"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <input
+                                type="text"
+                                id="username"
+                                placeholder="Ingresa tu correo"
+                                autocomplete="username"
+                                required
+                            >
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- CONTRASEÑA -->
+                    <div class="form-group">
+
+                        <label>CONTRASEÑA</label>
+
+                        <div class="input-container">
+
+                            <div class="input-icon">
+                                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                                    <rect x="3" y="7"
+                                          width="10"
+                                          height="7"
+                                          rx="1.5"
+                                          stroke="currentColor"
+                                          stroke-width="1.5"/>
+                                    <path d="M5 7V5a3 3 0 016 0v2"
+                                          stroke="currentColor"
+                                          stroke-width="1.5"
+                                          stroke-linecap="round"/>
+                                </svg>
+                            </div>
+
+                            <input
+                                type="password"
+                                id="password"
+                                placeholder="Ingresa tu contraseña"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="eye-button"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ERROR -->
+                    <div id="errorMessage" class="error-message">
+
+                        <span>!</span>
+
+                        <p>Correo o contraseña incorrectos.</p>
+
+                    </div>
+
+
+                    <!-- BOTON -->
+                    <button
+                        type="submit"
+                        id="loginButton"
+                        class="login-button"
+                    >
+
+                        <span id="buttonText">
+                            Ingresar al panel
+                        </span>
+
+                        <span id="loader" class="loader"></span>
+
+                        <span class="arrow">→</span>
+
+                    </button>
+
+                </form>
+
+
+                <!-- FOOTER -->
+                <div class="card-footer">
+
+                    <div class="demo-box">
+
+                        <div class="demo-title">
+                            <span>ⓘ</span>
+                            Acceso con el backend
+                        </div>
+
+                        <p>
+                            Ingresa con tu correo y contraseña
+                            registrados en el sistema.
+                        </p>
+
+                    </div>
+
+                    <p class="student-link">
+                        ¿Eres aprendiz?
+                        <a href="index.html">
+                            Ver oferta educativa
+                        </a>
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <!-- MENSAJE DE ÉXITO -->
+            <div id="successMessage" class="success-message">
+
+                <div class="success-icon">
+                    ✓
+                </div>
+
+                <h3>¡Bienvenido!</h3>
+
+                <p>Redirigiendo al panel...</p>
+
+                <div class="progress">
+                    <div></div>
+                </div>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/login.js"></script>
+
+</body>
+</html>

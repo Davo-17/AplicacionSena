@@ -28,46 +28,11 @@ document.addEventListener('DOMContentLoaded', () => {
     userName.textContent = 'Santiago López';
   }
 
-  async function handleLogin() {
-    const email = prompt('Correo electrónico:');
-    if (!email) return;
-    const password = prompt('Contraseña:');
-    if (!password) return;
-
-    try {
-      const res = await fetch(`${API_URL}/auth/login`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password })
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        alert(`Error de autenticación: ${err.detail || 'Credenciales inválidas'}`);
-        return;
-      }
-
-      const data = await res.json();
-      localStorage.setItem('access_token', data.access_token);
-
-      // Obtener nombre del usuario
-      const yoRes = await fetch(`${API_URL}/auth/yo`, {
-        headers: { 'Authorization': `Bearer ${data.access_token}` }
-      });
-      if (yoRes.ok) {
-        const user = await yoRes.json();
-        showUserProfile(user.nombre || user.email || 'Usuario');
-      } else {
-        showUserProfile(email);
-      }
-
-      btnRegister.textContent = 'Cerrar sesión';
-      btnRegister.onclick = handleLogout;
-
-    } catch (err) {
-      alert('No se pudo conectar al servidor. Verifica que el backend esté corriendo.');
-      console.error(err);
-    }
+  // Sin sesión: mandamos a la página de login (frontend/login.html),
+  // que guarda el token y devuelve aquí. Al volver, el bloque de
+  // "Verificar sesión" de abajo lee el token y muestra el perfil.
+  function handleLogin() {
+    window.location.href = 'login.html';
   }
 
   function handleLogout() {
