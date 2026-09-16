@@ -723,3 +723,110 @@ function animateParticles() {
 
 
 animateParticles();
+
+
+/* =========================================================
+   LOGO ARRASTRABLE (mouse + dedo, Pointer Events)
+   - Se mueve solo sobre el panel izquierdo, sin salirse.
+   - Doble clic / doble toque lo devuelve a su sitio.
+   - Desactivado si el usuario prefiere movimiento reducido.
+========================================================= */
+
+(function logoArrastrable() {
+
+    const logo =
+        document.querySelector(".logo-wrapper");
+
+    if (!logo) return;
+
+    if (
+        window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) return;
+
+    let x = 0;
+    let y = 0;
+    let inicioX = 0;
+    let inicioY = 0;
+    let arrastrando = false;
+
+    function limitar(valor, min, max) {
+        return Math.min(Math.max(valor, min), max);
+    }
+
+    // Evita el arrastre fantasma nativo de la imagen.
+    logo.querySelectorAll("img").forEach((img) => {
+        img.draggable = false;
+    });
+
+    logo.addEventListener("pointerdown", (event) => {
+
+        arrastrando = true;
+
+        logo.style.transition = "none";
+
+        inicioX = event.clientX - x;
+        inicioY = event.clientY - y;
+
+        logo.classList.add("dragging");
+
+        logo.setPointerCapture(event.pointerId);
+
+    });
+
+    logo.addEventListener("pointermove", (event) => {
+
+        if (!arrastrando) return;
+
+        const panel = logo.closest(".left-panel");
+
+        let nx = event.clientX - inicioX;
+        let ny = event.clientY - inicioY;
+
+        if (panel) {
+
+            const p = panel.getBoundingClientRect();
+
+            const r = logo.getBoundingClientRect();
+
+            // Origen sin transformar, para confinar dentro del panel.
+            const baseX = r.left - x;
+            const baseY = r.top - y;
+
+            nx = limitar(nx, p.left - baseX + 8, p.right - baseX - r.width - 8);
+            ny = limitar(ny, p.top - baseY + 8, p.bottom - baseY - r.height - 8);
+
+        }
+
+        x = nx;
+        y = ny;
+
+        logo.style.transform =
+            "translate(" + x + "px," + y + "px)";
+
+    });
+
+    function terminar() {
+
+        arrastrando = false;
+
+        logo.classList.remove("dragging");
+
+    }
+
+    logo.addEventListener("pointerup", terminar);
+
+    logo.addEventListener("pointercancel", terminar);
+
+    // Doble clic / doble toque: vuelve al centro con animación.
+    logo.addEventListener("dblclick", () => {
+
+        x = 0;
+        y = 0;
+
+        logo.style.transition = "transform .35s ease";
+
+        logo.style.transform = "translate(0px, 0px)";
+
+    });
+
+})();
