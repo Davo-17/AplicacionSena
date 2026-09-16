@@ -81,17 +81,41 @@ document.addEventListener("DOMContentLoaded", () => {
     pintarProgramas(tecnologias.length ? tecnologias : programas.filter((_, i) => i >= 3), "tecnologiasBody");
   }
 
+  function capitalizar(texto) {
+    const t = String(texto || "").trim().toLowerCase();
+    return t ? t.charAt(0).toUpperCase() + t.slice(1) : "";
+  }
+
+  function actualizarConteo(contenedorId, total) {
+    const mapa = { tecnicasBody: "tecnicasCount", tecnologiasBody: "tecnologiasCount" };
+    const el = document.getElementById(mapa[contenedorId]);
+    if (el) el.textContent = total + (total === 1 ? " programa" : " programas");
+  }
+
   function pintarProgramas(lista, contenedorId) {
     const contenedor = document.getElementById(contenedorId);
     if (!contenedor) return;
+    actualizarConteo(contenedorId, lista.length);
+    if (!lista.length) {
+      contenedor.innerHTML = '<div class="program-empty">No hay programas aquí por ahora. Explora la otra modalidad.</div>';
+      return;
+    }
     contenedor.innerHTML = lista
       .map(
-        (p) => `
+        (p) => {
+          const modalidad = capitalizar(p.modalidad);
+          const jornada = capitalizar(p.jornada);
+          const pills =
+            (modalidad ? `<span class="meta-pill">${modalidad}</span>` : "") +
+            (jornada ? `<span class="meta-pill">${jornada}</span>` : "");
+          return `
       <div class="program-card" data-modality="${p.modalidad || ""}" data-shift="${p.jornada || ""}">
+        <div class="program-meta">${pills}</div>
         <h4>${p.titulo || p.title}</h4>
         <p>${p.descripcion || p.desc || ""}</p>
-        <a href="${p.url_sofia || p.url || "#"}" target="_blank" rel="noopener">Inscribirme →</a>
-      </div>`
+        <a href="${p.url_sofia || p.url || "#"}" target="_blank" rel="noopener">Inscribirme <span aria-hidden="true">→</span></a>
+      </div>`;
+        }
       )
       .join("");
   }
