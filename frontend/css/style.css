@@ -1214,6 +1214,18 @@ footer {
   gap: 0.5rem;
 }
 
+.chat-title-text {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.chat-status {
+  font-size: 0.7rem;
+  font-weight: 400;
+  opacity: 0.85;
+}
+
 .drag-icon {
   font-size: 1rem;
   opacity: 0.7;

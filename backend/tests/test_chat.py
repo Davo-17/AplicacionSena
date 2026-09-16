@@ -21,6 +21,7 @@ def _preguntar(texto: str) -> dict:
 def test_saludo() -> None:
     datos = _preguntar("Hola, buenas tardes")
     assert "Hola" in datos["respuesta"] or "asistente" in datos["respuesta"].lower()
+    assert "carmencho" in datos["respuesta"].lower()
 
 
 def test_inscripcion_con_sofia_plus() -> None:

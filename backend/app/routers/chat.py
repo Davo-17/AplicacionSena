@@ -1,4 +1,4 @@
-"""Bot SENA Dajesa: orientador 24/7 sin IA externa.
+"""Carmencho: asistente virtual de DAJESA, orientador 24/7 sin IA externa.
 
 Funciona para cualquier visitante (no pide login) y responde con los
 datos reales de la app: programas, novedades, fichas y postulaciones
@@ -172,7 +172,7 @@ def _responder(mensaje: str) -> ChatResponse:
     if _contiene(texto, ["hola", "buenas", "buenos dias", "buenas tardes", "buenas noches", "hey", "que tal", "saludos"]):
         return ChatResponse(
             respuesta=(
-                "¡Hola! 👋 Soy el asistente SENA Dajesa, disponible 24/7. "
+                "¡Hola! 👋 Soy Carmencho, tu asistente DAJESA, disponible 24/7. "
                 "Te oriento sobre programas, inscripciones en Sofia Plus, requisitos, costos y novedades. ¿Por dónde empezamos?"
             ),
             sugerencias=SUGERENCIAS_BASE,
@@ -406,7 +406,7 @@ def _responder(mensaje: str) -> ChatResponse:
     if _contiene(texto, ["donde", "ubicacion", "direccion", "sede", "contacto", "telefono", "correo", "horario de atencion", "quien eres", "eres humano", "robot"]):
         return ChatResponse(
             respuesta=(
-                "Soy el asistente virtual SENA Dajesa 🤖, disponible 24/7 aquí en la página. "
+                "Soy Carmencho 🤖, el asistente virtual de DAJESA, disponible 24/7 aquí en la página. "
                 "Para trámites presenciales acércate a tu centro SENA más cercano o entra a Sofia Plus. ¿Te ayudo con un programa?"
             ),
             sugerencias=SUGERENCIAS_BASE,

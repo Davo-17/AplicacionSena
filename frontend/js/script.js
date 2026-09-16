@@ -289,7 +289,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Así el bot NUNCA queda muerto para el usuario.
   function respuestaLocal(texto) {
     const t = texto.toLowerCase();
-    if (/hola|buenas|ayuda|menu/.test(t)) return "¡Hola! 👋 Puedo orientarte sobre programas, inscripciones en Sofia Plus, requisitos y costos. ¿Qué te interesa?";
+    if (/hola|buenas|ayuda|menu/.test(t)) return "¡Hola! 👋 Soy Carmencho. Puedo orientarte sobre programas, inscripciones en Sofia Plus, requisitos y costos. ¿Qué te interesa?";
     if (/inscri|sofia|cupo|registr/.test(t)) return "Inscríbete gratis en Sofia Plus: https://oferta.senasofiaplus.edu.co/ Busca el programa y dale a 'Inscribirme'.";
     if (/requisito|documento|edad|papeles/.test(t)) return "Requisitos: mayor de 14 años, documento vigente y certificado de estudios según el programa. Todo gratis.";
     if (/costo|precio|gratis|pago|vale|cuesta/.test(t)) return "Toda la formación del SENA es 100% gratuita. Nadie debe cobrarte.";
