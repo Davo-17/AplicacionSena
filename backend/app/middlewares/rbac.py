@@ -3,7 +3,7 @@
 from fastapi import Depends, HTTPException, status
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
-from app.schemas.auth import UsuarioActual
+from app.schemas.auth import MENSAJE_DOMINIO, UsuarioActual, es_correo_institucional
 from app.services.auth_service import AuthService
 
 _esquema_bearer = HTTPBearer(auto_error=True)
@@ -25,9 +25,13 @@ def obtener_usuario_actual(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Token inválido o expirado",
         ) from exc
+    email = str(datos.get("email", ""))
+    # Candado 2: aunque el token sea válido, el dueño debe ser institucional.
+    if email and not es_correo_institucional(email):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=MENSAJE_DOMINIO)
     return UsuarioActual(
         id=str(datos.get("sub", "")),
-        email=str(datos.get("email", "")),
+        email=email,
         rol=str(datos.get("rol", datos.get("role", "instructor"))).lower(),
     )
 

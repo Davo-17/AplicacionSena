@@ -875,6 +875,61 @@ body {
 }
 
 
+/* Hint de correo institucional + aviso Betowa */
+.input-hint {
+
+    margin-top: 6px;
+
+    font-size: 11px;
+
+    color: rgba(255, 255, 255, 0.55);
+}
+
+.betowa-notice {
+
+    padding: 12px 14px;
+
+    border-radius: 12px;
+
+    background: rgba(57, 169, 0, 0.12);
+
+    border: 1px solid rgba(57, 169, 0, 0.35);
+
+    animation: fade-up .3s ease both;
+}
+
+.betowa-notice p {
+
+    font-size: 12px;
+
+    color: #e9fbe5;
+
+    margin-bottom: 10px;
+}
+
+.betowa-button {
+
+    display: inline-block;
+
+    padding: 10px 16px;
+
+    border-radius: 8px;
+
+    background: #39a900;
+
+    color: #fff;
+
+    font-size: 12px;
+
+    font-weight: 700;
+}
+
+.betowa-button:hover {
+
+    background: #2e8800;
+}
+
+
 /* =========================================================
    BOTON LOGIN
 ========================================================= */

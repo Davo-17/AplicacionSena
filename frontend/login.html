@@ -165,7 +165,7 @@
                     <!-- USUARIO -->
                     <div class="form-group">
 
-                        <label>CORREO</label>
+                        <label>CORREO INSTITUCIONAL</label>
 
                         <div class="input-container">
 
@@ -184,12 +184,16 @@
                             <input
                                 type="text"
                                 id="username"
-                                placeholder="Ingresa tu correo"
+                                placeholder="ejemplo@soy.sena.edu.co"
                                 autocomplete="username"
                                 required
                             >
 
                         </div>
+
+                        <p class="input-hint">
+                            Solo correos @soy.sena.edu.co o @sena.edu.co
+                        </p>
 
                     </div>
 
@@ -247,6 +251,26 @@
                     </div>
 
 
+                    <!-- AVISO + REDIRECCIÓN A BETOWA (correo no institucional) -->
+                    <div id="betowaNotice" class="betowa-notice" hidden>
+
+                        <p>
+                            Este acceso es solo con correo institucional
+                            (@soy.sena.edu.co o @sena.edu.co).
+                        </p>
+
+                        <a
+                            href="https://betowa.sena.edu.co"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="betowa-button"
+                        >
+                            Ir a Betowa para inscribirme ↗
+                        </a>
+
+                    </div>
+
+
                     <!-- BOTON -->
                     <button
                         type="submit"
@@ -278,16 +302,20 @@
                         </div>
 
                         <p>
-                            Ingresa con tu correo y contraseña
-                            registrados en el sistema.
+                            Acceso para aprendices e instructores con
+                            correo institucional registrado en el sistema.
                         </p>
 
                     </div>
 
                     <p class="student-link">
-                        ¿Eres aprendiz?
-                        <a href="index.html">
-                            Ver oferta educativa
+                        ¿Eres aspirante sin correo institucional?
+                        <a
+                            href="https://betowa.sena.edu.co"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            Inscríbete en Betowa
                         </a>
                     </p>
 

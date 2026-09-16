@@ -58,6 +58,7 @@ header {
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 1rem;
   height: 80px;
 }
 
@@ -65,6 +66,7 @@ header {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  flex-shrink: 0;
 }
 
 .sena-logo img {
@@ -72,20 +74,34 @@ header {
   width: auto;
 }
 
-.brand div {
+.brand-text {
   display: flex;
   flex-direction: column;
+  line-height: 1.15;
 }
 
 .brand strong {
   font-family: var(--font-heading);
   color: var(--secondary);
-  font-size: 1.2rem;
+  font-size: 1.3rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
 }
 
 .brand span {
-  font-size: 0.8rem;
-  color: var(--text-muted);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  color: var(--primary);
+}
+
+/* Panel único: navegación + acciones (tema, usuario).
+   En escritorio va en línea; en móvil vive dentro del menú hamburguesa. */
+.nav-panel {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
 }
 
 nav#mainNav {
@@ -96,10 +112,17 @@ nav#mainNav {
 nav#mainNav a {
   font-weight: 500;
   transition: color 0.2s;
+  white-space: nowrap;
 }
 
 nav#mainNav a:hover {
   color: var(--primary);
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .nav-user-area {
@@ -143,9 +166,92 @@ nav#mainNav a:hover {
 .menu-button {
   display: none;
   background: none;
-  border: none;
-  font-size: 1.8rem;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  font-size: 1.4rem;
+  line-height: 1;
   cursor: pointer;
+  color: var(--text-dark);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.menu-button:hover {
+  background: var(--bg-light);
+}
+
+.menu-button:active {
+  transform: scale(0.96);
+}
+
+/* =====================================================
+   HEADER EN MÓVIL: todo vive dentro del menú hamburguesa
+   (navegación + tema + registro/perfil en un solo panel)
+===================================================== */
+@media (max-width: 900px) {
+  .menu-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .nav {
+    position: relative;
+  }
+
+  .nav-panel {
+    display: none;
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    right: 0;
+    left: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
+    padding: 0.75rem;
+    z-index: 1001;
+  }
+
+  .nav-panel.open {
+    display: flex;
+  }
+
+  nav#mainNav {
+    flex-direction: column;
+    gap: 0;
+  }
+
+  nav#mainNav a {
+    padding: 0.7rem 0.8rem;
+    border-radius: 8px;
+  }
+
+  nav#mainNav a:hover {
+    background: var(--bg-light);
+  }
+
+  .nav-actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.6rem;
+    border-top: 1px solid var(--border-color);
+    margin-top: 0.6rem;
+    padding-top: 0.75rem;
+  }
+
+  .nav-user-area {
+    justify-content: center;
+  }
+
+  .nav-user-area .button {
+    width: 100%;
+    text-align: center;
+  }
 }
 
 /* =====================================================
@@ -1010,13 +1116,7 @@ footer {
    RESPONSIVE DESIGN
 ===================================================== */
 @media (max-width: 768px) {
-  nav#mainNav {
-    display: none;
-  }
-  
-  .menu-button {
-    display: block;
-  }
+  /* El header colapsa en 900px (ver bloque del menú hamburguesa). */
 
   .hero-container {
     grid-template-columns: 1fr;
@@ -1184,8 +1284,21 @@ body.dark-mode nav {
 }
 
 body.dark-mode nav#mainNav a,
-body.dark-mode .brand strong,
-body.dark-mode .brand span {
+body.dark-mode .brand strong {
+  color: var(--text-primary) !important;
+}
+
+body.dark-mode .nav-panel {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color-theme) !important;
+}
+
+body.dark-mode nav#mainNav a:hover {
+  background-color: var(--bg-primary) !important;
+}
+
+body.dark-mode .menu-button {
+  border-color: var(--border-color-theme) !important;
   color: var(--text-primary) !important;
 }
 
@@ -1275,38 +1388,43 @@ body.dark-mode .answer-card input:checked + .answer-content p {
   color: #ffffff !important;
 }
 
-/* Diseño Moderno para el Botón de Cambio de Modo */
-.theme-toggle {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(0, 0, 0, 0.1);
-  border-radius: 20px;
-  padding: 6px 12px;
+/* Botón de tema icon-only, siempre fijo en el header (fuera del panel). */
+.header-actions {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.6rem;
+  flex-shrink: 0;
+}
+
+.theme-toggle {
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: inherit;
-  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  backdrop-filter: blur(8px);
+  font-size: 1.25rem;
+  line-height: 1;
+  transition: background 0.2s ease, transform 0.15s ease;
 }
 
 .theme-toggle:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-color: rgba(0, 0, 0, 0.2);
+  background: var(--bg-light);
+}
+
+.theme-toggle:active {
+  transform: scale(0.94);
 }
 
 body.dark-mode .theme-toggle {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.2);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  border-color: var(--border-color-theme);
 }
 
 body.dark-mode .theme-toggle:hover {
-  background: rgba(255, 255, 255, 0.15);
-  box-shadow: 0 4px 16px rgba(56, 189, 248, 0.2);
+  background: rgba(255, 255, 255, 0.08);
 }
 
 

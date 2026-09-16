@@ -79,7 +79,42 @@ togglePassword.addEventListener("click", () => {
    QUITAR ERROR AL ESCRIBIR
 ========================================================= */
 
-usernameInput.addEventListener("input", clearError);
+/* Dominios institucionales permitidos (igual que el backend). */
+const DOMINIOS_PERMITIDOS = ["soy.sena.edu.co", "sena.edu.co"];
+
+const betowaNotice =
+    document.getElementById("betowaNotice");
+
+
+function esCorreoInstitucional(correo) {
+
+    const limpio = correo.trim().toLowerCase();
+
+    return DOMINIOS_PERMITIDOS.some((d) => limpio.endsWith("@" + d));
+
+}
+
+
+function mostrarAvisoBetowa() {
+
+    errorMessage.classList.remove("show");
+
+    if (betowaNotice) betowaNotice.hidden = false;
+
+}
+
+
+function ocultarAvisoBetowa() {
+
+    if (betowaNotice) betowaNotice.hidden = true;
+
+}
+
+
+usernameInput.addEventListener("input", () => {
+    clearError();
+    ocultarAvisoBetowa();
+});
 
 passwordInput.addEventListener("input", clearError);
 
@@ -106,9 +141,22 @@ loginForm.addEventListener("submit", function(event) {
         passwordInput.value;
 
 
-    /* Limpiar error */
+    /* Limpiar errores */
 
     errorMessage.classList.remove("show");
+
+    ocultarAvisoBetowa();
+
+
+    /* Solo correos institucionales: el resto va a Betowa */
+
+    if (!esCorreoInstitucional(username)) {
+
+        mostrarAvisoBetowa();
+
+        return;
+
+    }
 
 
     /* Activar carga */
@@ -142,6 +190,12 @@ loginForm.addEventListener("submit", function(event) {
 
     })
     .then((res) => {
+
+        // 422 = dominio no institucional (lo frena el backend).
+        if (res.status === 422) {
+            mostrarAvisoBetowa();
+            throw new Error("dominio no permitido");
+        }
 
         if (!res.ok) {
             throw new Error("credenciales inválidas");
@@ -233,6 +287,11 @@ function loginIncorrecto() {
 
     buttonText.textContent =
         "Ingresar";
+
+    // Si ya mostramos el aviso de Betowa, no sumamos el error genérico.
+    if (betowaNotice && !betowaNotice.hidden) {
+        return;
+    }
 
     errorMessage.classList.add("show");
 

@@ -41,7 +41,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function mostrarBotonRegistro() {
-    btnRegister.textContent = "Registrarse";
+    btnRegister.textContent = "Ingresar";
     btnRegister.onclick = handleLogin;
     userProfile.classList.add("hidden");
   }
@@ -359,17 +359,54 @@ document.addEventListener("DOMContentLoaded", () => {
 
   pintarChips(CHIPS_INICIALES);
 
-  // ---------- 7. TEMA CLARO/OSCURO ----------
+  // ---------- 7. TEMA CLARO/OSCURO (botón icono fijo en el header) ----------
   const themeToggle = document.getElementById("themeToggle");
+
+  function pintarTema() {
+    const oscuro = document.body.classList.contains("dark-mode");
+    themeToggle?.setAttribute("aria-pressed", String(oscuro));
+    themeToggle?.setAttribute("aria-label", oscuro ? "Cambiar a modo claro" : "Cambiar a modo oscuro");
+  }
+
   if (localStorage.getItem("theme") === "dark") document.body.classList.add("dark-mode");
+  pintarTema();
   themeToggle?.addEventListener("click", () => {
     document.body.classList.toggle("dark-mode");
     const oscuro = document.body.classList.contains("dark-mode");
     localStorage.setItem("theme", oscuro ? "dark" : "light");
+    pintarTema();
   });
 
-  // Menú móvil.
-  document.getElementById("menuButton")?.addEventListener("click", () => {
-    document.getElementById("mainNav")?.classList.toggle("open");
+  // Menú hamburguesa: un solo panel con navegación + tema + usuario.
+  const menuButton = document.getElementById("menuButton");
+  const navPanel = document.getElementById("navPanel");
+
+  function setMenu(abierto) {
+    if (!navPanel || !menuButton) return;
+    navPanel.classList.toggle("open", abierto);
+    menuButton.setAttribute("aria-expanded", String(abierto));
+    menuButton.setAttribute("aria-label", abierto ? "Cerrar menú" : "Abrir menú");
+  }
+
+  function menuAbierto() {
+    return !!navPanel?.classList.contains("open");
+  }
+
+  menuButton?.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setMenu(!menuAbierto());
+  });
+  // Cierra al elegir un enlace, al pulsar Escape o al tocar fuera del panel.
+  navPanel?.querySelectorAll("a").forEach((link) => {
+    link.addEventListener("click", () => setMenu(false));
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menuAbierto()) {
+      setMenu(false);
+      menuButton?.focus();
+    }
+  });
+  document.addEventListener("click", (e) => {
+    if (menuAbierto() && !navPanel.contains(e.target)) setMenu(false);
   });
 });

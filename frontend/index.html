@@ -45,43 +45,41 @@
                 <div class="sena-logo">
                     <img src="assets/logo-sena.png" alt="Logo SENA">
                 </div>
-                <div>
-                    <strong>SENA dajesa</strong>
-                    <span>Oferta Educativa</span>
+                <div class="brand-text">
+                    <strong>DAJESA</strong>
+                    <span>CFDCM</span>
                 </div>
             </a>
 
            
-
-            <nav id="mainNav">
+            <div class="nav-panel" id="navPanel">
+            <nav id="mainNav" aria-label="Navegación principal">
                 <a href="#inicio">Inicio</a>
                 <a href="#programas">Programas</a>
                 <a href="#asistente-ia">Asistente IA</a>
                 <a href="#novedades">Novedades</a>
             </nav>
 
-
-
-
-
-            <button id="themeToggle" class="theme-toggle" aria-label="Cambiar tema">
-                <span class="theme-icon-light">☀️ Claro</span>
-                <span class="theme-icon-dark">🌙 Oscuro</span>
-              </button>
-
-
-
-
+            <div class="nav-actions">
             <div class="nav-user-area" id="navUserArea">
                 
-                <button class="button button-outline-sm" id="btnRegister">Registrarse</button>
+                <button class="button button-outline-sm" id="btnRegister">Ingresar</button>
                 <div class="user-profile hidden" id="userProfile">
                   <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Foto de perfil" class="user-avatar">
                   <span class="user-name" id="userName">Santiago López</span>
                 </div>
             </div>
+            </div>
+            </div>
 
-            <button id="menuButton" class="menu-button" type="button">☰</button>
+            <div class="header-actions">
+            <button id="themeToggle" class="theme-toggle" type="button" aria-label="Cambiar a modo oscuro" aria-pressed="false">
+                <span class="theme-icon-light" aria-hidden="true">☀️</span>
+                <span class="theme-icon-dark" aria-hidden="true">🌙</span>
+              </button>
+
+            <button id="menuButton" class="menu-button" type="button" aria-expanded="false" aria-controls="navPanel" aria-label="Abrir menú">☰</button>
+            </div>
         </div>
 
 
@@ -363,7 +361,7 @@
           <div class="footer-brand">
               <a href="#inicio" class="brand">
                   <div class="sena-logo"><img src="assets/logo-sena.png" alt="Logo SENA"></div>
-                  <div><strong>SENA dajesa</strong><span>Oferta Educativa</span></div>
+                  <div><strong>DAJESA</strong><span>CFDCM</span></div>
               </a>
               <p>Formación profesional integral para desarrollar tus habilidades y construir un mejor futuro.</p>
           </div>
@@ -388,7 +386,7 @@
       </div>
       <div class="footer-bottom">
           <div class="container footer-bottom-content">
-              <p>© 2026 SENA dajesa. Todos los derechos reservados.</p>
+              <p>© 2026 DAJESA · CFDCM. Todos los derechos reservados.</p>
               <p>Oferta Educativa</p>
           </div>
       </div>
