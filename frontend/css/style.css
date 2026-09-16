@@ -1435,3 +1435,79 @@ body.dark-mode .filter-group select {
   border-color: #334155 !important;
   color: #f8fafc !important;
 }
+
+/* =====================================================
+   CHATBOT EXCEPCIONAL: chips, typing, links
+===================================================== */
+.quick-replies {
+  display: flex;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  padding: 0.6rem 0.75rem 0.2rem;
+}
+.quick-replies .chip {
+  border: 1px solid #39a900;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, background 0.15s ease;
+}
+.quick-replies .chip:hover {
+  background: #39a900;
+  color: #fff;
+  transform: translateY(-1px);
+}
+.bot-message a {
+  color: #15803d;
+  font-weight: 700;
+  text-decoration: underline;
+  word-break: break-all;
+}
+.bot-message.typing {
+  display: inline-flex;
+  gap: 4px;
+  align-items: center;
+  min-width: 52px;
+}
+.bot-message.typing span {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #94a3b8;
+  display: inline-block;
+  animation: typing-bounce 1.2s infinite;
+}
+.bot-message.typing span:nth-child(2) { animation-delay: 0.15s; }
+.bot-message.typing span:nth-child(3) { animation-delay: 0.3s; }
+@keyframes typing-bounce {
+  0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+  30% { transform: translateY(-5px); opacity: 1; }
+}
+.chat-input button:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+body.dark-mode .quick-replies .chip {
+  background: #0f172a !important;
+  border-color: #38bdf8 !important;
+  color: #e0f2fe !important;
+}
+body.dark-mode .bot-message a {
+  color: #38bdf8 !important;
+}
+@media (max-width: 480px) {
+  .chat-box {
+    right: 1rem;
+    left: 1rem;
+    width: auto;
+    height: 70vh;
+  }
+  .chat-button {
+    right: 1rem;
+    bottom: 1rem;
+  }
+}

@@ -202,7 +202,7 @@ document.addEventListener("DOMContentLoaded", () => {
     pintarQuiz();
   });
 
-  // ---------- 6. CHAT (conectado al backend) ----------
+  // ---------- 6. CHATBOT (conectado al backend, funciona para todo visitante) ----------
   const chatButton = document.getElementById("chatButton");
   const chatBox = document.getElementById("chatBox");
   const closeChat = document.getElementById("closeChat");
@@ -210,28 +210,126 @@ document.addEventListener("DOMContentLoaded", () => {
   const sendMessage = document.getElementById("sendMessage");
   const chatMessages = document.getElementById("chatMessages");
 
+  // Contenedor de respuestas rápidas (chips). Se crea si el HTML aún no lo trae.
+  let quickReplies = document.getElementById("quickReplies");
+  if (!quickReplies) {
+    quickReplies = document.createElement("div");
+    quickReplies.id = "quickReplies";
+    quickReplies.className = "quick-replies";
+    chatBox?.querySelector(".chat-input")?.before(quickReplies);
+  }
+
+  const CHIPS_INICIALES = ["Ver programas", "Inscribirme", "Requisitos", "¿Es gratis?", "Novedades"];
+  let enviando = false;
+
   function abrirChat() {
     chatBox.classList.remove("hidden");
+    chatInput?.focus();
   }
-  chatButton.addEventListener("click", () => chatBox.classList.toggle("hidden"));
+  function alternarChat() {
+    chatBox.classList.toggle("hidden");
+    if (!chatBox.classList.contains("hidden")) chatInput?.focus();
+  }
+  chatButton.addEventListener("click", alternarChat);
   closeChat.addEventListener("click", () => chatBox.classList.add("hidden"));
   document.getElementById("btnChatearAhora")?.addEventListener("click", abrirChat);
 
+  // Convierte URLs en links clicables y saltos de línea en <br>, sin inyectar HTML.
+  function formatearBot(texto) {
+    const div = document.createElement("div");
+    const urlRegex = /(https?:\/\/[^\s]+)/g;
+    let last = 0;
+    let match;
+    const frag = document.createDocumentFragment();
+    while ((match = urlRegex.exec(texto)) !== null) {
+      if (match.index > last) frag.appendChild(document.createTextNode(texto.slice(last, match.index)));
+      const a = document.createElement("a");
+      a.href = match[0];
+      a.target = "_blank";
+      a.rel = "noopener noreferrer";
+      a.textContent = match[0].includes("sofia") ? "Abrir Sofia Plus →" : match[0];
+      frag.appendChild(a);
+      last = match.index + match[0].length;
+    }
+    frag.appendChild(document.createTextNode(texto.slice(last)));
+    div.appendChild(frag);
+    div.innerHTML = div.innerHTML.replace(/\n/g, "<br>");
+    return div.innerHTML;
+  }
+
+  function pintarChips(lista) {
+    if (!quickReplies) return;
+    quickReplies.innerHTML = "";
+    (lista?.length ? lista : CHIPS_INICIALES).slice(0, 5).forEach((texto) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "chip";
+      b.textContent = texto;
+      b.addEventListener("click", () => {
+        chatInput.value = texto;
+        enviarMensaje();
+      });
+      quickReplies.appendChild(b);
+    });
+  }
+
+  function mostrarEscribiendo() {
+    const t = document.createElement("div");
+    t.className = "bot-message typing";
+    t.id = "typingBubble";
+    t.innerHTML = "<span></span><span></span><span></span>";
+    chatMessages.appendChild(t);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+  function ocultarEscribiendo() {
+    document.getElementById("typingBubble")?.remove();
+  }
+
+  // Fallback local (misma lógica base del backend) si el servidor no responde.
+  // Así el bot NUNCA queda muerto para el usuario.
+  function respuestaLocal(texto) {
+    const t = texto.toLowerCase();
+    if (/hola|buenas|ayuda|menu/.test(t)) return "¡Hola! 👋 Puedo orientarte sobre programas, inscripciones en Sofia Plus, requisitos y costos. ¿Qué te interesa?";
+    if (/inscri|sofia|cupo|registr/.test(t)) return "Inscríbete gratis en Sofia Plus: https://oferta.senasofiaplus.edu.co/ Busca el programa y dale a 'Inscribirme'.";
+    if (/requisito|documento|edad|papeles/.test(t)) return "Requisitos: mayor de 14 años, documento vigente y certificado de estudios según el programa. Todo gratis.";
+    if (/costo|precio|gratis|pago|vale|cuesta/.test(t)) return "Toda la formación del SENA es 100% gratuita. Nadie debe cobrarte.";
+    if (/tecnolog|adso|software/.test(t)) return "Tecnologías: ADSO, Gestión Empresarial y Redes. Están en la sección Programas con botón de inscripción.";
+    if (/tecnica|tecnico/.test(t)) return "Técnicas: Programación de Software, Sistemas y Contabilización. Míralas en Programas.";
+    if (/novedad|noticia|convocatoria|evento/.test(t)) return "Revisa la sección Novedades: convocatoria virtual 2026, bootcamp de IA y feria de empleo.";
+    if (/gracias/.test(t)) return "¡Con gusto! 🎓 ¿Te recomiendo un programa según tus gustos?";
+    if (/adios|chao|hasta luego/.test(t)) return "¡Éxitos! 🚀 Quedo atento 24/7.";
+    return "Puedo ayudarte con programas, inscripciones, requisitos y costos. Prueba: 'quiero estudiar software' o 'cómo me inscribo'.";
+  }
+
   async function enviarMensaje() {
     const texto = chatInput.value.trim();
-    if (!texto) return;
+    if (!texto || enviando) return;
+    enviando = true;
+    sendMessage.disabled = true;
     agregarBurbuja(texto, "user-message");
     chatInput.value = "";
+    quickReplies.innerHTML = "";
+    mostrarEscribiendo();
+    // Pequeña pausa para que se sienta humano (y da tiempo al backend).
+    await new Promise((r) => setTimeout(r, 450));
     try {
       const data = await pedir(API_URL + "/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ mensaje: texto }),
       });
-      agregarBurbuja(data.respuesta, "bot-message");
+      ocultarEscribiendo();
+      agregarBurbujaHTML(formatearBot(data.respuesta || "Te escucho, ¿me cuentas un poco más?"), "bot-message");
+      pintarChips(data.sugerencias);
     } catch (err) {
-      console.warn(err);
-      agregarBurbuja("Estoy sin conexión al servidor, pero puedes ver los programas o ir a Sofia Plus.", "bot-message");
+      console.warn("Chat offline, uso fallback local.", err);
+      ocultarEscribiendo();
+      agregarBurbuja(respuestaLocal(texto), "bot-message");
+      pintarChips(CHIPS_INICIALES);
+    } finally {
+      enviando = false;
+      sendMessage.disabled = false;
+      chatInput.focus();
     }
   }
 
@@ -243,10 +341,23 @@ document.addEventListener("DOMContentLoaded", () => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   }
 
+  function agregarBurbujaHTML(html, clase) {
+    const div = document.createElement("div");
+    div.className = clase;
+    div.innerHTML = html;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
   sendMessage.addEventListener("click", enviarMensaje);
-  chatInput.addEventListener("keypress", (e) => {
-    if (e.key === "Enter") enviarMensaje();
+  chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      enviarMensaje();
+    }
   });
+
+  pintarChips(CHIPS_INICIALES);
 
   // ---------- 7. TEMA CLARO/OSCURO ----------
   const themeToggle = document.getElementById("themeToggle");
