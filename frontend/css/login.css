@@ -935,16 +935,7 @@ body {
 }
 
 
-/* Hint de correo institucional + aviso Betowa */
-.input-hint {
-
-    margin-top: 6px;
-
-    font-size: 11px;
-
-    color: rgba(255, 255, 255, 0.55);
-}
-
+/* Aviso Betowa */
 .betowa-notice {
 
     padding: 12px 14px;
