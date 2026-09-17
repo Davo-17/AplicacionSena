@@ -1,5 +1,6 @@
 export interface Evidence {
   id: string;
+  programId?: string;
   fileName: string;
   fileType: string;
   fileData: string;

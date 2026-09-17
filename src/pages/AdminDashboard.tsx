@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { type Program, savePrograms } from "../data/programs";
 import { type Evidence, saveEvidence } from "../data/evidence";
 
@@ -39,17 +39,15 @@ const EMPTY_PROGRAM: Omit<Program, "id"> = {
   titulacion: "",
 };
 
+const HERO_PROGRAM_IMAGES = [
+  { url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1800&q=85", label: "Tecnología y desarrollo" },
+  { url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1800&q=85", label: "Gastronomía y alimentos" },
+  { url: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1800&q=85", label: "Electricidad y energía" },
+  { url: "https://images.unsplash.com/photo-1503387762-592dea58ef21?auto=format&fit=crop&w=1800&q=85", label: "Construcción e infraestructura" },
+];
+
 function SenaLogo({ size = 36 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 100 100" fill="none">
-      <circle cx="50" cy="50" r="48" fill="#39A900" />
-      <circle cx="50" cy="50" r="44" fill="white" />
-      <circle cx="50" cy="50" r="40" fill="#39A900" />
-      <text x="50" y="44" textAnchor="middle" fill="white" fontSize="16" fontFamily="Outfit, sans-serif" fontWeight="800" letterSpacing="2">SENA</text>
-      <text x="50" y="62" textAnchor="middle" fill="#F5C800" fontSize="7" fontFamily="Outfit, sans-serif" fontWeight="600" letterSpacing="1">COLOMBIA</text>
-      <path d="M25 70 Q50 78 75 70" stroke="#F5C800" strokeWidth="2" fill="none" />
-    </svg>
-  );
+  return <img src="/sena logo.jpg" alt="SENA" width={size} height={size} className="rounded-full"/>
 }
 
 // ── Program Form Modal ─────────────────────────────────────────────
@@ -337,9 +335,24 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
   const [evidenceDescription, setEvidenceDescription] = useState("");
   const [fileInputKey, setFileInputKey] = useState(0);
   const [selectedEvidenceFile, setSelectedEvidenceFile] = useState<File | null>(null);
+  const [selectedEvidenceProgram, setSelectedEvidenceProgram] = useState("general");
+  const [heroImageIndex, setHeroImageIndex] = useState(0);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setHeroImageIndex((current) => (current + 1) % HERO_PROGRAM_IMAGES.length);
+    }, 5000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   const tecnicas = programs.filter((p) => p.level === "Técnico");
   const tecnologias = programs.filter((p) => p.level === "Tecnólogo");
+  const selectedProgram = programs.find((program) => program.id === selectedEvidenceProgram);
+  const visibleEvidence = evidence.filter((item) =>
+    selectedEvidenceProgram === "general"
+      ? !item.programId
+      : item.programId === selectedEvidenceProgram
+  );
 
   const filtered = programs.filter((p) => {
     const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -370,8 +383,12 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
 
   function handleDelete(p: Program) {
     const updated = programs.filter((x) => x.id !== p.id);
+    const evidenceWithoutProgram = evidence.filter((item) => item.programId !== p.id);
     savePrograms(updated);
+    saveEvidence(evidenceWithoutProgram);
     onUpdate(updated);
+    onEvidenceUpdate(evidenceWithoutProgram);
+    if (selectedEvidenceProgram === p.id) setSelectedEvidenceProgram("general");
     setDeleteTarget(null);
     showToast("Programa eliminado");
   }
@@ -392,6 +409,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
     reader.onload = () => {
       const item: Evidence = {
         id: `e_${Date.now()}`,
+        ...(selectedProgram ? { programId: selectedProgram.id } : {}),
         fileName: file.name,
         fileType: file.type || "application/octet-stream",
         fileData: String(reader.result),
@@ -404,7 +422,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
       setEvidenceDescription("");
       setSelectedEvidenceFile(null);
       setFileInputKey((key) => key + 1);
-      showToast("Evidencia publicada correctamente");
+      showToast(selectedProgram ? "Evidencia asignada al programa" : "Evidencia general publicada");
     };
     reader.readAsDataURL(file);
   }
@@ -417,29 +435,34 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen admin-shell">
       {/* Topbar */}
-      <header className="bg-white border-b border-gray-100 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
+      <header className="admin-topbar z-30">
+        <div className="admin-sidebar-inner max-w-7xl mx-auto px-4 py-3.5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="float-logo">
+            <div className="admin-logo-frame float-logo">
               <SenaLogo size={36} />
             </div>
             <div>
-              <p className="font-display font-800 text-gray-900 text-sm leading-none" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>SENA — Panel Administrativo</p>
-              <p className="text-xs text-gray-400 mt-0.5">{user.role}</p>
+              <p className="font-display font-800 text-white text-sm leading-none" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>DAJESA <span className="text-lime-300">/</span> Control administrativo</p>
+              <p className="text-xs text-white/45 mt-1">{user.role} · Gestión de oferta educativa</p>
             </div>
           </div>
+          <nav className="admin-nav hidden lg:flex" aria-label="Navegación administrativa">
+            <a href="#resumen" className="admin-nav-link active"><span className="admin-nav-icon">01</span>Resumen</a>
+            <a href="#programas" className="admin-nav-link"><span className="admin-nav-icon">02</span>Programas</a>
+            <a href="#evidencias" className="admin-nav-link"><span className="admin-nav-icon">03</span>Evidencias</a>
+          </nav>
           <div className="flex items-center gap-3">
-            <div className="hidden sm:flex items-center gap-2 bg-green-50 border border-green-100 rounded-xl px-3 py-1.5">
-              <div className="w-6 h-6 rounded-full bg-green-600 flex items-center justify-center text-white text-xs font-bold">
+            <div className="hidden sm:flex items-center gap-2 admin-user-chip">
+              <div className="w-7 h-7 rounded-full bg-lime-400 flex items-center justify-center text-[#17321a] text-xs font-bold">
                 {user.name[0]}
               </div>
-              <span className="text-xs font-semibold text-green-800">{user.name}</span>
+              <span className="text-xs font-semibold text-white/80">{user.name}</span>
             </div>
             <button
               onClick={onLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold text-gray-500 border border-gray-200 hover:bg-gray-50 transition-colors"
+              className="admin-logout flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
                 <path d="M5 7h7M9 5l2 2-2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
@@ -451,7 +474,37 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <main id="resumen" className="admin-main max-w-7xl mx-auto px-4 py-8 md:py-10">
+        <div className="admin-hero mb-8 rounded-[2rem] p-6 md:p-9 text-white overflow-hidden relative">
+          {HERO_PROGRAM_IMAGES.map((image, index) => (
+            <div
+              key={image.url}
+              className={`admin-hero-image absolute inset-0 ${index === heroImageIndex ? "is-active" : ""}`}
+              style={{ backgroundImage: `url(${image.url})` }}
+              aria-hidden="true"
+            />
+          ))}
+          <div className="admin-hero-overlay absolute inset-0" />
+          <div className="relative z-10 max-w-2xl">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-lime-200 font-semibold"><span className="admin-live-dot" /> Centro de control</div>
+            <h1 className="font-display text-3xl md:text-4xl font-800 mt-3" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>La oferta educativa,<br /><span className="text-yellow-300">bajo control.</span></h1>
+            <p className="text-sm text-white/70 mt-3 max-w-xl leading-relaxed">Administra programas, publica actividades generales y organiza evidencias dentro de cada programa de formación.</p>
+          </div>
+          <div className="admin-hero-caption absolute bottom-5 left-6 md:left-9 z-10 text-[11px] uppercase tracking-[0.14em] text-white/60">{HERO_PROGRAM_IMAGES[heroImageIndex].label}</div>
+          <div className="admin-hero-dots absolute bottom-5 right-6 md:right-9 z-10 flex items-center gap-2">
+            {HERO_PROGRAM_IMAGES.map((image, index) => (
+              <button
+                key={image.label}
+                type="button"
+                aria-label={`Mostrar imagen: ${image.label}`}
+                onClick={() => setHeroImageIndex(index)}
+                className={`admin-hero-dot ${index === heroImageIndex ? "is-active" : ""}`}
+              />
+            ))}
+          </div>
+          <div className="admin-hero-mark absolute right-8 md:right-20 top-1/2 -translate-y-1/2 hidden sm:flex">SENA</div>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
           {[
@@ -460,17 +513,17 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
             { label: "Tecnologías", value: tecnologias.length, color: "#1a2e0f", bg: "#c8dbbe" },
             { label: "Áreas cubiertas", value: new Set(programs.map((p) => p.area)).size, color: "#F5C800", bg: "#fef9c3" },
           ].map((s) => (
-            <div key={s.label} className="bg-white rounded-2xl p-4 border border-gray-100 shadow-sm">
-              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-3" style={{ background: s.bg }}>
+            <div key={s.label} className="admin-stat rounded-2xl p-4 border shadow-sm">
+              <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: s.bg }}>
                 <span className="text-lg font-bold" style={{ color: s.color }}>{s.value}</span>
               </div>
-              <p className="text-xs text-gray-500">{s.label}</p>
+              <p className="text-xs text-slate-500 font-medium">{s.label}</p>
             </div>
           ))}
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-col sm:flex-row gap-3 mb-6">
+        <div className="admin-toolbar flex flex-col sm:flex-row gap-3 mb-6">
           <div className="relative flex-1">
             <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 16 16" fill="none">
               <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
@@ -480,7 +533,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Buscar por nombre, código o área..."
-              className="w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 transition-all bg-white"
+              className="admin-search w-full pl-9 pr-4 py-2.5 rounded-xl border text-sm outline-none transition-all"
             />
           </div>
           <div className="flex gap-2">
@@ -488,7 +541,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
               <button
                 key={lvl}
                 onClick={() => setFilterLevel(lvl)}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
+                className="admin-filter px-3.5 py-2 rounded-xl text-xs font-semibold transition-all"
                 style={{
                   background: filterLevel === lvl ? "#1a2e0f" : "white",
                   color: filterLevel === lvl ? "white" : "#6b7280",
@@ -501,7 +554,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
           </div>
           <button
             onClick={() => setModal({ type: "create" })}
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 whitespace-nowrap"
+            className="admin-primary-button flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 whitespace-nowrap"
             style={{ background: "#39A900", color: "white" }}
           >
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
@@ -512,11 +565,11 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
         </div>
 
         {/* Programs table */}
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden shadow-sm">
+        <div id="programas" className="admin-panel bg-white rounded-2xl border overflow-hidden shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr style={{ background: "#f8faf6" }}>
+                <tr className="admin-table-head">
                   {["Programa", "Código", "Nivel", "Área", "Duración", "Modalidad", "Acciones"].map((h) => (
                     <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 whitespace-nowrap">
                       {h}
@@ -533,7 +586,7 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
                   </tr>
                 ) : (
                   filtered.map((p) => (
-                    <tr key={p.id} className="hover:bg-gray-50 transition-colors">
+                    <tr key={p.id} className="admin-table-row transition-colors">
                       <td className="px-4 py-3">
                         <p className="text-sm font-semibold text-gray-900 max-w-xs leading-snug">{p.name}</p>
                         <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{p.titulacion}</p>
@@ -590,24 +643,37 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
             </table>
           </div>
           {filtered.length > 0 && (
-            <div className="px-4 py-3 border-t border-gray-50">
+            <div className="admin-table-footer px-4 py-3 border-t">
               <p className="text-xs text-gray-400">Mostrando {filtered.length} de {programs.length} programas</p>
             </div>
           )}
         </div>
 
         {/* Weekly evidence */}
-        <section className="mt-8 bg-white rounded-2xl border border-gray-100 shadow-sm p-5 md:p-6">
+        <section id="evidencias" className="admin-panel mt-8 bg-white rounded-3xl border shadow-sm p-5 md:p-6">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
             <div>
               <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#39A900" }}>Contenido público</p>
-              <h2 className="font-display font-800 text-xl text-gray-900 mt-1" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>Adjuntar evidencia de las actividades SENA del centro de CFDM realizadas esta semana</h2>
-              <p className="text-sm text-gray-500 mt-1">Las evidencias publicadas aparecerán en la página principal de usuarios.</p>
+              <h2 className="font-display font-800 text-xl text-gray-900 mt-1" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>Evidencias de actividades</h2>
+              <p className="text-sm text-gray-500 mt-1">Publica contenido general o asígnalo a un programa específico para mantenerlo organizado.</p>
             </div>
-            <span className="flex-shrink-0 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1.5 rounded-full">{evidence.length} publicadas</span>
+            <span className="flex-shrink-0 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1.5 rounded-full">{visibleEvidence.length} en esta vista</span>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end p-4 rounded-xl bg-gray-50 border border-gray-100">
+          <div className="mb-4">
+            <label htmlFor="evidence-program" className="block text-xs font-semibold text-gray-600 mb-1.5">Sección de evidencias</label>
+            <select
+              id="evidence-program"
+              value={selectedEvidenceProgram}
+              onChange={(event) => setSelectedEvidenceProgram(event.target.value)}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 bg-white"
+            >
+              <option value="general">Actividades generales del centro</option>
+              {programs.map((program) => <option key={program.id} value={program.id}>{program.name} · {program.code}</option>)}
+            </select>
+          </div>
+
+          <div className="admin-evidence-composer grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end p-4 rounded-2xl border">
             <div>
               <label htmlFor="evidence-description" className="block text-xs font-semibold text-gray-600 mb-1.5">Descripción breve</label>
               <textarea
@@ -639,14 +705,14 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
               style={{ background: "#39A900" }}
             >
               <svg width="15" height="15" viewBox="0 0 17 17" fill="none"><path d="M8.5 3v8M5 7l3.5-4L12 7M3 12.5v1h11v-1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              Subir evidencia
+              {selectedProgram ? "Asignar al programa" : "Publicar general"}
             </button>
           </div>
 
-          {evidence.length > 0 && (
+          {visibleEvidence.length > 0 && (
             <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-              {evidence.map((item) => (
-                <div key={item.id} className="flex items-center gap-3 border border-gray-100 rounded-xl p-3">
+              {visibleEvidence.map((item) => (
+                <div key={item.id} className="admin-evidence-item flex items-center gap-3 border rounded-xl p-3">
                   {item.fileType.startsWith("image/") ? <img src={item.fileData} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-50" /> : <div className="w-14 h-14 rounded-lg bg-green-50 flex items-center justify-center text-green-700 text-xs font-bold">DOC</div>}
                   <div className="min-w-0 flex-1">
                     <p className="text-xs font-semibold text-gray-800 truncate">{item.fileName}</p>
@@ -659,8 +725,14 @@ export default function AdminDashboard({ programs, onUpdate, evidence, onEvidenc
               ))}
             </div>
           )}
+          {visibleEvidence.length === 0 && (
+            <div className="mt-5 rounded-2xl border border-dashed border-gray-200 py-8 text-center">
+              <p className="text-sm font-semibold text-gray-600">Aún no hay evidencias en esta sección</p>
+              <p className="text-xs text-gray-400 mt-1">Selecciona un archivo y agrega una descripción para publicar la primera.</p>
+            </div>
+          )}
         </section>
-      </div>
+      </main>
 
       {/* Modals */}
       {modal && (
