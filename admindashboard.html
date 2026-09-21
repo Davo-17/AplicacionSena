@@ -1,17 +1,18 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>DAJESA - Control Administrativo SENA</title>
 
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
-    tailwind.config = {
+    window.tailwind = window.tailwind || {};
+    window.tailwind.config = {
       theme: {
         extend: {
           fontFamily: {
@@ -19,974 +20,2110 @@
           }
         }
       }
-    }
+    };
   </script>
 
   <style>
+    :root {
+      --bg-page: #efe8df;
+      --bg-ink: #0f1411;
+      --bg-panel: #f8f2ea;
+      --bg-card: #fffdf9;
+      --bg-sidebar: #0f1714;
+      --panel-strong: #12221d;
+      --line: rgba(15, 23, 18, 0.08);
+      --line-soft: rgba(255,255,255,0.09);
+      --text: #1d2a21;
+      --text-alt: #4a5d50;
+      --text-soft: rgba(255,255,255,0.72);
+      --green: #5bb87b;
+      --green-deep: #2b6b46;
+      --gold: #dfb97c;
+      --sand: #f1d9b4;
+      --shadow: 0 28px 60px rgba(17, 22, 18, 0.12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
     body {
       margin: 0;
-      padding: 0;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+      font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(91,184,123,0.16), transparent 28%),
+        linear-gradient(135deg, #f2e7d9 0%, #e9e1d5 100%);
+      color: var(--text);
+      line-height: 1.5;
     }
-    .admin-shell {
-      background-color: #f8fafc;
+
+    a { text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+
+    .page-shell {
       min-height: 100vh;
+      padding: 1.25rem;
+      background: transparent;
     }
-    .admin-layout {
+
+    .dashboard {
       display: flex;
-      min-height: 100vh;
-      align-items: stretch;
-      flex-direction: row;
+      min-height: calc(100vh - 2.5rem);
+      width: 100%;
+      background: linear-gradient(180deg, rgba(13, 20, 18, 0.98), rgba(19, 29, 25, 0.96));
+      border: 1px solid rgba(10, 15, 14, 0.15);
+      border-radius: 2.5rem;
+      overflow: hidden;
+      box-shadow: var(--shadow);
+      position: relative;
     }
-    .admin-main {
-      flex: 1;
-      min-width: 0;
-      padding-left: 1rem;
+
+    .dashboard::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(125deg, rgba(255,255,255,0.05), transparent 55%),
+        radial-gradient(circle at 70% 10%, rgba(91,184,123,0.18), transparent 28%);
+      pointer-events: none;
     }
-    .admin-topbar {
-      position: sticky;
-      top: 0;
-      width: 260px;
-      min-width: 260px;
-      height: 100vh;
-      background-color: #17321a;
-      border-right: 1px solid rgba(255,255,255,0.08);
-      box-shadow: 8px 0 20px rgba(18, 31, 19, 0.12);
-      z-index: 40;
-    }
-    .admin-sidebar-inner {
-      height: 100%;
-      padding: 1.25rem 1rem 1rem;
+
+    .sidebar {
+      width: 270px;
+      min-width: 270px;
+      padding: 1.4rem 1rem 1rem;
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 1rem;
+      background: rgba(8, 14, 12, 0.82);
+      border-right: 1px solid var(--line-soft);
+      position: relative;
+      z-index: 1;
     }
-    .admin-logo-frame {
-      width: 42px;
-      height: 42px;
-      border-radius: 9999px;
-      overflow: hidden;
-      background: #39A900;
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      margin-bottom: 1.8rem;
+      padding: 0.3rem 0.35rem;
+    }
+
+    .brand-mark {
+      width: 64px;
+      height: 64px;
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border-radius: 1.4rem;
+      background: linear-gradient(135deg, #6cd594, #2f7d4d);
+      box-shadow: 0 18px 32px rgba(43, 107, 70, 0.38);
+      border: 1px solid rgba(255,255,255,0.2);
     }
-    .admin-nav {
+
+    .brand-mark svg { display: block; }
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      display: block;
+      object-fit: cover;
+      border-radius: inherit;
+    }
+
+    .brand-text {
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      color: white;
+      letter-spacing: -0.06em;
+      font-size: 1.18rem;
+    }
+
+    .brand-sub {
+      font-size: 0.66rem;
+      letter-spacing: 0.17em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.46);
+      margin-top: 0.25rem;
+    }
+
+    .nav {
       display: flex;
       flex-direction: column;
       gap: 0.5rem;
-      width: 100%;
+      margin-top: 1rem;
     }
-    .admin-nav-link {
-      padding: 0.75rem 0.875rem;
-      border-radius: 0.9rem;
-      font-size: 0.8125rem;
-      font-weight: 600;
-      color: rgba(255, 255, 255, 0.7);
-      text-decoration: none;
+
+    .nav-item {
       display: flex;
       align-items: center;
-      gap: 0.6rem;
-      transition: all 0.2s;
-      width: 100%;
+      gap: 0.72rem;
+      padding: 1rem 0.95rem;
+      border-radius: 1.2rem;
+      color: var(--text-soft);
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      background: rgba(255,255,255,0.01);
+      border: 1px solid transparent;
+      transition: all 0.24s ease;
+      position: relative;
+      overflow: hidden;
     }
-    .admin-nav-link:hover, .admin-nav-link.active {
-      color: #ffffff;
-      background: rgba(255, 255, 255, 0.1);
+
+    .nav-item::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, rgba(92, 184, 123, 0.16), transparent 55%);
+      opacity: 0;
+      transition: opacity 0.2s ease;
     }
-    .admin-nav-icon {
-      font-size: 0.7rem;
-      opacity: 0.5;
+
+    .nav-item:hover::before,
+    .nav-item.active::before {
+      opacity: 1;
     }
-    .admin-user-chip {
-      background: rgba(255, 255, 255, 0.08);
-      padding: 0.25rem 0.75rem 0.25rem 0.375rem;
-      border-radius: 9999px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+
+    .nav-item:hover,
+    .nav-item.active {
+      color: white;
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(126, 179, 146, 0.2);
+      transform: translateX(3px);
     }
-    .admin-logout {
-      color: rgba(255,255,255,0.8);
-      background: rgba(255, 255, 255, 0.08);
+
+    .nav-number {
+      width: 2rem;
+      font-size: 0.72rem;
+      color: #a7e8ba;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      position: relative;
+      z-index: 1;
+    }
+
+    .nav-item span:last-child {
+      position: relative;
+      z-index: 1;
+    }
+
+    .user-box {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.8rem 0.8rem 0.7rem;
+      border-radius: 1rem;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.06);
+      margin-bottom: 0.7rem;
+    }
+
+    .avatar {
+      width: 2.2rem;
+      height: 2.2rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #d6b67c, #a67b2d);
+      color: #101b17;
+      font-weight: 900;
+      font-size: 0.72rem;
       border: 1px solid rgba(255,255,255,0.15);
     }
-    .admin-logout:hover {
-      color: #fff;
-      background: rgba(239, 68, 68, 0.25);
-      border-color: rgba(239, 68, 68, 0.4);
+
+    .user-name {
+      font-size: 0.74rem;
+      font-weight: 700;
+      color: white;
     }
-    .admin-hero {
-      background: linear-gradient(135deg, #17321a 0%, #0d1e10 100%);
+
+    .logout-btn {
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.05));
+      color: rgba(255,255,255,0.85);
+      border-radius: 0.95rem;
+      padding: 0.82rem 0.9rem;
+      cursor: pointer;
+      font-size: 0.72rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      transition: all 0.2s ease;
+    }
+
+    .logout-btn:hover {
+      border-color: rgba(108,213,148,0.3);
+      background: rgba(92,184,123,0.08);
+    }
+
+    .main {
+      flex: 1;
+      background:
+        linear-gradient(180deg, #f4efe9 0%, #f6f4f1 100%);
+      padding: 1.2rem 1.2rem 1.2rem 0.95rem;
+      overflow-y: auto;
       position: relative;
+      z-index: 1;
     }
-    .admin-hero-image {
-      opacity: 0;
-      transition: opacity 1s ease-in-out;
+
+    .hero {
+      position: relative;
+      min-height: 270px;
+      border-radius: 2rem;
+      overflow: hidden;
+      background: #0f172a;
+      margin-bottom: 1.2rem;
+      box-shadow: 0 20px 40px rgba(18, 28, 21, 0.14);
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 42%;
+      background: linear-gradient(180deg, transparent 0%, rgba(7, 10, 9, 0.7) 100%);
+      z-index: 1;
+    }
+
+    .hero-slide {
+      position: absolute;
+      inset: 0;
       background-size: cover;
       background-position: center;
+      opacity: 0;
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      transform: scale(1.05);
+      filter: saturate(1.08) contrast(1.1);
     }
-    .admin-hero-image.is-active {
-      opacity: 0.35;
+
+    .hero-slide.active {
+      opacity: 1;
+      transform: scale(1);
     }
-    .admin-hero-overlay {
-      background: linear-gradient(180deg, rgba(23,50,26,0.3) 0%, rgba(13,30,16,0.85) 100%);
+
+    .hero-overlay {
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(11, 17, 14, 0.92) 0%, rgba(11, 17, 14, 0.7) 24%, rgba(11, 17, 14, 0.3) 62%, rgba(11, 17, 14, 0.5) 100%),
+        linear-gradient(135deg, rgba(93, 180, 121, 0.2), transparent 38%);
+      z-index: 1;
     }
-    .admin-live-dot {
-      width: 8px;
-      height: 8px;
-      background-color: #a3e635;
-      border-radius: 9999px;
-      box-shadow: 0 0 10px #a3e635;
+
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      padding: 2.1rem 2rem 1.2rem;
+      max-width: 660px;
     }
-    .admin-hero-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 9999px;
-      background: rgba(255, 255, 255, 0.3);
-      transition: all 0.3s;
+
+    .live-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.55rem;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.2em;
+      font-weight: 800;
+      color: #b9f8c2;
+      background: rgba(13, 55, 31, 0.38);
+      border: 1px solid rgba(185, 248, 194, 0.2);
+      padding: 0.52rem 0.7rem;
+      border-radius: 999px;
     }
-    .admin-hero-dot.is-active {
-      width: 24px;
-      background: #a3e635;
+
+    .live-tag::before {
+      content: "";
+      width: 0.6rem;
+      height: 0.6rem;
+      border-radius: 50%;
+      background: #7ef0a5;
+      box-shadow: 0 0 12px rgba(126, 240, 165, 0.7);
     }
-    .admin-hero-mark {
-      font-size: 8rem;
-      font-weight: 900;
-      color: rgba(255, 255, 255, 0.03);
-      letter-spacing: 0.05em;
-      pointer-events: none;
+
+    .hero h1 {
       font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(2.35rem, 3vw, 3.5rem);
+      line-height: 0.96;
+      margin: 1rem 0 0.9rem;
+      color: white;
+      letter-spacing: -0.08em;
+      max-width: 500px;
     }
-    .admin-stat {
+
+    .hero h1 .accent { color: #f6d087; }
+
+    .hero p {
+      color: rgba(255,255,255,0.8);
+      max-width: 32rem;
+      margin: 0;
+      font-size: 0.92rem;
+      line-height: 1.7;
+    }
+
+    .hero-caption {
+      position: absolute;
+      left: 2rem;
+      bottom: 1.3rem;
+      z-index: 3;
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.86);
+    }
+
+    .hero-dots {
+      position: absolute;
+      right: 2rem;
+      bottom: 1.1rem;
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 0.65rem;
+    }
+
+    .hero-dot {
+      width: 0.7rem;
+      height: 0.7rem;
+      border: none;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.4);
+      cursor: pointer;
+      padding: 0;
+      transition: all 0.25s ease;
+    }
+
+    .hero-dot.active {
+      width: 2rem;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #d7efbf, #8de3a0);
+      box-shadow: 0 0 0 4px rgba(126, 240, 165, 0.12);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.95rem;
+      margin-bottom: 1.2rem;
+    }
+
+    .stat-card {
+      position: relative;
+      background: linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.74) 100%);
+      border: 1px solid var(--line);
+      border-radius: 1.5rem;
+      padding: 1rem 1rem 0.9rem;
+      box-shadow: 0 10px 24px rgba(17, 22, 18, 0.04);
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, var(--green), transparent);
+    }
+
+    .stat-icon {
+      width: 2.9rem;
+      height: 2.9rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 1rem;
+      font-weight: 900;
+      margin-bottom: 0.8rem;
+      font-size: 1rem;
+      letter-spacing: -0.04em;
+      box-shadow: inset 0 0 0 1px rgba(17, 22, 18, 0.04);
+    }
+
+    .stat-label {
+      color: var(--text-alt);
+      font-size: 0.66rem;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-weight: 800;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      padding: 0.85rem;
+      border: 1px solid var(--line);
+      background: rgba(255,255,255,0.65);
+      backdrop-filter: blur(8px);
+      border-radius: 1.35rem;
+      box-shadow: 0 12px 25px rgba(17, 22, 18, 0.03);
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .search-wrap {
+      position: relative;
+      flex: 1;
+      min-width: 210px;
+    }
+
+    .search-wrap svg {
+      position: absolute;
+      left: 0.95rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: #64748b;
+    }
+
+    .search-wrap input {
+      width: 100%;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 0.9rem;
+      background: #fff;
+      color: #0f172a;
+      padding: 0.82rem 0.9rem 0.82rem 2.5rem;
+      outline: none;
+      box-shadow: inset 0 1px 0 rgba(15, 23, 42, 0.02);
+    }
+
+    .filter-group {
+      display: flex;
+      gap: 0.45rem;
+      flex-wrap: wrap;
+    }
+
+    .filter-btn {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: rgba(255,255,255,0.7);
+      color: #4b5563;
+      border-radius: 0.9rem;
+      padding: 0.72rem 0.9rem;
+      cursor: pointer;
+      font-weight: 800;
+      font-size: 0.7rem;
+      letter-spacing: 0.03em;
+      transition: all 0.2s ease;
+    }
+
+    .filter-btn.active {
+      background: linear-gradient(135deg, #102018 0%, #1d3326 100%);
+      color: white;
+      border-color: rgba(255,255,255,0.05);
+      box-shadow: 0 10px 18px rgba(14, 20, 15, 0.15);
+    }
+
+    .primary-btn {
+      background: linear-gradient(135deg, #4fb772, #2b7f4c);
+      color: white;
+      border: none;
+      border-radius: 0.95rem;
+      padding: 0.8rem 1rem;
+      cursor: pointer;
+      font-weight: 800;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      box-shadow: 0 12px 24px rgba(43, 127, 76, 0.22);
+    }
+
+    .panel {
+      background: linear-gradient(180deg, rgba(255,255,255,0.84), rgba(255,255,255,0.94));
+      border: 1px solid var(--line);
+      border-radius: 1.8rem;
+      box-shadow: 0 18px 24px rgba(17,22,18,0.04);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .panel::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(120deg, rgba(91,184,123,0.03), transparent 45%);
+      pointer-events: none;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      position: relative;
+      z-index: 1;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 760px;
+    }
+
+    th, td {
+      padding: 1rem 1.15rem;
+      border-bottom: 1px solid rgba(15, 23, 18, 0.06);
+      text-align: left;
+    }
+
+    thead th {
+      background: rgba(247, 245, 242, 0.96);
+      color: #64748b;
+      font-size: 0.7rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    tbody tr:hover {
+      background: rgba(91,184,123,0.04);
+    }
+
+    .program-name {
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #0f172a;
+      margin: 0;
+      letter-spacing: -0.02em;
+    }
+
+    .program-sub {
+      color: #7d8d9d;
+      font-size: 0.7rem;
+      margin-top: 0.28rem;
+    }
+
+    .code-badge {
+      display: inline-block;
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.55rem;
+      background: #f3f4f6;
+      color: #495766;
+      font-size: 0.7rem;
+      font-weight: 800;
+      font-family: 'SFMono-Regular', Consolas, monospace;
+      border: 1px solid rgba(15, 23, 42, 0.04);
+    }
+
+    .level-chip {
+      display: inline-block;
+      padding: 0.36rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .level-chip.tech { background: #e7f7eb; color: #206b42; }
+    .level-chip.tecno { background: #f6ead1; color: #8c6320; }
+    .level-chip.operario { background: #e5f4e9; color: #2e7d4f; }
+    .level-chip.complementaria { background: #f1eafa; color: #7951a5; }
+
+    .duration-badge {
+      display: inline-block;
+      background: #eefaf2;
+      color: #1e6c43;
+      border-radius: 0.55rem;
+      padding: 0.34rem 0.52rem;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 0.4rem;
+    }
+
+    .icon-btn {
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 0.7rem;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      background: transparent;
+    }
+
+    .icon-btn.edit {
+      color: #2d62d1;
+      background: rgba(45, 98, 209, 0.06);
+    }
+
+    .icon-btn.delete {
+      color: #d14d4d;
+      background: rgba(209, 77, 77, 0.06);
+    }
+
+    .icon-btn:hover { transform: translateY(-1px); }
+
+    .table-footer {
+      padding: 0.88rem 1.2rem;
+      font-size: 0.7rem;
+      color: #758392;
+      text-transform: uppercase;
+      letter-spacing: 0.13em;
+      font-weight: 900;
+      background: rgba(247, 245, 242, 0.9);
+      border-top: 1px solid rgba(15, 23, 18, 0.06);
+      position: relative;
+      z-index: 1;
+    }
+
+    .section-panel {
+      margin-top: 1.2rem;
+      padding: 1.5rem 1.4rem 1.2rem;
+      background: linear-gradient(180deg, rgba(255,255,255,0.82), rgba(255,255,255,0.9));
+      border: 1px solid var(--line);
+      border-radius: 1.8rem;
+      box-shadow: 0 18px 24px rgba(17,22,18,0.04);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .section-panel::before {
+      content: "";
+      position: absolute;
+      inset: 0 auto auto 0;
+      width: 100%;
+      height: 4px;
+      background: linear-gradient(90deg, rgba(91,184,123,0.8), rgba(223,185,124,0.8));
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .eyebrow {
+      color: #2b6b46;
+      font-size: 0.68rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+      font-weight: 900;
+      margin: 0 0 0.45rem;
+    }
+
+    .section-header h2 {
+      margin: 0;
+      color: #1d2a21;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: clamp(1.7rem, 2vw, 2.2rem);
+      letter-spacing: -0.06em;
+    }
+
+    .section-header p {
+      color: #64748b;
+      font-size: 0.84rem;
+      margin: 0.38rem 0 0;
+    }
+
+    .vista-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.55rem 0.8rem;
+      border-radius: 999px;
+      background: #edf7f0;
+      border: 1px solid rgba(43, 107, 70, 0.12);
+      color: #2b6b46;
+      font-size: 0.66rem;
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .evidence-selector {
+      margin-bottom: 1rem;
+      display: grid;
+      gap: 0.45rem;
+    }
+
+    .evidence-selector label {
+      font-size: 0.7rem;
+      color: #64748b;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    .evidence-selector select {
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      background: #f8fafc;
+      border-radius: 0.9rem;
+      padding: 0.8rem 0.9rem;
+      color: #0f172a;
+      outline: none;
+      max-width: 28rem;
+    }
+
+    .composer {
+      display: grid;
+      grid-template-columns: minmax(0,1.2fr) minmax(0,1fr) auto;
+      gap: 0.8rem;
+      padding: 1rem;
+      background: rgba(243, 240, 235, 0.92);
+      border: 1px solid rgba(15, 23, 18, 0.06);
+      border-radius: 1.3rem;
+      align-items: end;
+    }
+
+    .field { display: grid; gap: 0.45rem; }
+
+    .field label {
+      font-size: 0.67rem;
+      color: #64748b;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      font-weight: 900;
+    }
+
+    .field textarea,
+    .field input,
+    .field select {
+      width: 100%;
+      border: 1px solid rgba(15, 23, 42, 0.08);
+      border-radius: 0.8rem;
+      background: white;
+      padding: 0.8rem 0.9rem;
+      color: #0f172a;
+      outline: none;
+    }
+
+    .field textarea {
+      resize: vertical;
+      min-height: 4.2rem;
+    }
+
+    .upload-format {
+      font-size: 0.67rem;
+      color: #7d8d9d;
+      margin-top: 0.35rem;
+    }
+
+    .publish-btn {
+      height: 3.2rem;
+      padding: 0 1.15rem;
+      border: none;
+      border-radius: 0.95rem;
+      background: linear-gradient(135deg, #4fb772, #2b7f4c);
+      color: white;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 12px 24px rgba(43, 127, 76, 0.2);
+    }
+
+    .evidence-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .evidence-card {
+      border: 1px solid rgba(15, 23, 18, 0.08);
+      background: linear-gradient(180deg, rgba(255,255,255,0.9), rgba(249,247,244,0.9));
+      border-radius: 1.25rem;
+      padding: 0.9rem;
+      box-shadow: 0 12px 18px rgba(12, 18, 15, 0.03);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .evidence-card::before {
+      content: "";
+      position: absolute;
+      inset: auto 0 0 0;
+      height: 2px;
+      background: linear-gradient(90deg, rgba(91,184,123,0.7), rgba(223,185,124,0.7));
+    }
+
+    .evidence-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 0.7rem;
+      margin-bottom: 0.8rem;
+    }
+
+    .thumb {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 0.9rem;
+      object-fit: cover;
+      border: 1px solid rgba(15, 23, 42, 0.06);
+      background: #f8fafc;
+      flex-shrink: 0;
+      box-shadow: 0 8px 14px rgba(17, 22, 18, 0.06);
+    }
+
+    .doc-thumb {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 0.9rem;
+      background: linear-gradient(135deg, #edf8f1, #dfeee4);
+      border: 1px solid rgba(43, 107, 70, 0.1);
+      color: #2b6b46;
+      font-weight: 900;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      font-size: 0.72rem;
+      box-shadow: inset 0 0 0 1px rgba(43, 107, 70, 0.05);
+    }
+
+    .evidence-meta {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .evidence-name {
+      color: #0f172a;
+      font-size: 0.74rem;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin: 0;
+    }
+
+    .evidence-date {
+      color: #7f8fa1;
+      font-size: 0.68rem;
+      margin-top: 0.3rem;
+      font-weight: 700;
+    }
+
+    .delete-evidence {
+      width: 2rem;
+      height: 2rem;
+      border: none;
+      border-radius: 0.7rem;
+      background: rgba(209, 77, 77, 0.06);
+      color: #d14d4d;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .evidence-description {
+      background: rgba(248,250,252,0.8);
+      border-radius: 0.8rem;
+      padding: 0.72rem 0.8rem;
+      color: #4f5d6d;
+      font-size: 0.73rem;
+      line-height: 1.55;
+      margin: 0;
+      border: 1px solid rgba(15, 23, 18, 0.04);
+    }
+
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 1.4rem;
+      transform: translateX(-50%);
+      background: #163d29;
+      color: white;
+      border-radius: 0.9rem;
+      padding: 0.75rem 1rem;
+      font-size: 0.76rem;
+      font-weight: 800;
+      box-shadow: 0 18px 30px rgba(0,0,0,0.18);
+      z-index: 50;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    @media (max-width: 900px) {
+      .dashboard {
+        flex-direction: column;
+        border-radius: 1.5rem;
+      }
+
+      .sidebar {
+        width: 100%;
+        min-width: 100%;
+        border-right: none;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      }
+
+      .main {
+        padding: 1rem;
+      }
+
+      .stats-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+
+      .composer {
+        grid-template-columns: 1fr;
+      }
+
+      .evidence-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .page-shell { padding: 0.7rem; }
+      .stats-grid { grid-template-columns: 1fr; }
+      .toolbar { align-items: stretch; }
+      .filter-group { width: 100%; }
+      .filter-btn { flex: 1; }
+      .primary-btn { width: 100%; justify-content: center; }
+      .hero-content { padding: 1.4rem 1.2rem 4rem; }
+      .hero-caption, .hero-dots { left: 1.2rem; right: 1.2rem; }
+      .hero-dots { bottom: 1rem; justify-content: flex-end; }
+    }
+
+    /* Compact admin workspace inspired by the reference dashboard. */
+    body {
+      background: #e8ebf7;
+      color: #1f2937;
+    }
+
+    .page-shell {
+      padding: 0;
+    }
+
+    .dashboard {
+      min-height: 100vh;
+      border: 0;
+      border-radius: 0;
+      background: #f5f6fb;
+      box-shadow: none;
+    }
+
+    .dashboard::before {
+      display: none;
+    }
+
+    .sidebar {
+      width: 214px;
+      min-width: 214px;
+      padding: 1rem 0.7rem;
       background: #ffffff;
-      border-color: #f1f5f9;
+      border-right: 1px solid #e2e6f0;
     }
-    .admin-table-head {
-      background-color: #f8fafc;
-      border-bottom: 1px solid #f1f5f9;
+
+    .brand {
+      margin: 0 0 1.15rem;
+      padding: 0.3rem 0.45rem 1rem;
+      border-bottom: 1px solid #edf0f6;
     }
-    .admin-table-row:hover {
-      background-color: #f8fafc;
+
+    .brand-mark {
+      width: 38px;
+      height: 38px;
+      border-radius: 0.7rem;
+      box-shadow: none;
+      border: 0;
+    }
+
+    .brand-mark svg { width: 25px; height: 25px; }
+
+    .brand-text {
+      color: #26344a;
+      font-size: 0.95rem;
+      letter-spacing: -0.04em;
+    }
+
+    .brand-sub {
+      color: #9aa4b5;
+      font-size: 0.52rem;
+      letter-spacing: 0.1em;
+    }
+
+    .nav {
+      gap: 0.18rem;
+      margin-top: 0;
+    }
+
+    .nav-item {
+      padding: 0.7rem 0.65rem;
+      border-radius: 0.55rem;
+      color: #657187;
+      font-size: 0.72rem;
+      background: transparent;
+      border: 0;
+    }
+
+    .nav-item::before { display: none; }
+
+    .nav-item:hover,
+    .nav-item.active {
+      color: #2f8b57;
+      background: #eaf6ee;
+      border: 0;
+      transform: none;
+    }
+
+    .nav-number {
+      width: 1.25rem;
+      color: #9aa4b5;
+      font-size: 0.6rem;
+    }
+
+    .nav-item.active .nav-number { color: #2f8b57; }
+
+    .user-box {
+      padding: 0.55rem;
+      gap: 0.5rem;
+      border-radius: 0.55rem;
+      background: #f6f8fc;
+      border: 1px solid #edf0f6;
+    }
+
+    .avatar {
+      width: 1.8rem;
+      height: 1.8rem;
+      background: #dff2e5;
+      color: #2f8b57;
+      font-size: 0.62rem;
+    }
+
+    .user-name {
+      color: #536176;
+      font-size: 0.64rem;
+    }
+
+    .logout-btn {
+      padding: 0.6rem;
+      border-radius: 0.55rem;
+      background: #ffffff;
+      color: #8b96a8;
+      border: 1px solid #e8ebf2;
+      font-size: 0.64rem;
+    }
+
+    .main {
+      padding: 1rem 1.25rem 2rem;
+      background: #f5f6fb;
+    }
+
+    .hero {
+      min-height: 126px;
+      margin-bottom: 0.85rem;
+      border-radius: 0.55rem;
+      box-shadow: none;
+      background: #dfe4f5;
+    }
+
+    .hero::after { height: 100%; background: linear-gradient(90deg, rgba(20, 67, 43, 0.82), rgba(20, 67, 43, 0.16)); }
+    .hero-overlay { background: linear-gradient(90deg, rgba(27, 85, 52, 0.86), rgba(27, 85, 52, 0.16)); }
+    .hero-slide { filter: saturate(0.65); }
+    .hero-content { padding: 1.35rem 1.5rem; }
+    .live-tag { padding: 0; border: 0; background: none; color: #dce6ff; font-size: 0.58rem; }
+    .live-tag::before { width: 0.4rem; height: 0.4rem; }
+    .hero h1 { margin: 0.35rem 0 0.35rem; font-size: clamp(1.5rem, 2.5vw, 2.2rem); letter-spacing: -0.06em; }
+    .hero p { max-width: 38rem; font-size: 0.72rem; line-height: 1.45; color: rgba(255,255,255,0.78); }
+    .hero-caption { left: auto; right: 1.5rem; bottom: 1rem; font-size: 0.58rem; }
+    .hero-dots { right: 1.5rem; bottom: 2.1rem; }
+    .hero-dot { width: 0.42rem; height: 0.42rem; }
+    .hero-dot.active { width: 1.1rem; box-shadow: none; }
+
+    .stats-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.8rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .stat-card {
+      min-height: 98px;
+      padding: 0.8rem;
+      border-radius: 0.55rem;
+      border: 1px solid #e3e7f0;
+      box-shadow: 0 3px 10px rgba(40, 52, 84, 0.05);
+      background: #ffffff;
+    }
+
+    .stat-card::before { height: 2px; background: #57b8a7; }
+    .stat-icon { width: 2rem; height: 2rem; margin-bottom: 0.55rem; border-radius: 0.45rem; font-size: 0.76rem; }
+    .stat-label { color: #8a95a7; font-size: 0.57rem; letter-spacing: 0.08em; }
+
+    .insights-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(220px, 0.8fr);
+      gap: 0.8rem;
+      margin-bottom: 0.85rem;
+    }
+
+    .insight-card {
+      min-height: 178px;
+      padding: 0.95rem 1rem;
+      border: 1px solid #e3e7f0;
+      border-radius: 0.55rem;
+      background: #ffffff;
+      box-shadow: 0 3px 10px rgba(40, 52, 84, 0.05);
+    }
+
+    .insight-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 1rem;
+      margin-bottom: 0.7rem;
+    }
+
+    .insight-title { margin: 0; color: #334155; font-size: 0.76rem; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+    .insight-subtitle { margin: 0.2rem 0 0; color: #9aa4b5; font-size: 0.62rem; }
+    .insight-total { color: #1f2937; font-size: 1.1rem; font-weight: 800; white-space: nowrap; }
+
+    .pie-layout { display: flex; align-items: center; gap: 1.2rem; min-height: 105px; }
+    .pie-chart {
+      width: 106px;
+      height: 106px;
+      flex: 0 0 106px;
+      border-radius: 50%;
+      background: conic-gradient(#37a466 0 100%);
+      position: relative;
+      box-shadow: inset 0 0 0 1px rgba(30, 80, 49, 0.08);
+    }
+    .pie-chart::after {
+      content: "";
+      position: absolute;
+      inset: 25px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 0 1px rgba(30, 80, 49, 0.06);
+    }
+    .chart-legend { display: grid; gap: 0.4rem; margin: 0; color: #68768a; font-size: 0.6rem; min-width: 0; }
+    .legend-item { display: flex; align-items: center; gap: 0.35rem; line-height: 1.25; }
+    .legend-dot { display: inline-block; width: 0.5rem; height: 0.5rem; flex: 0 0 0.5rem; border-radius: 50%; }
+    .legend-count { color: #26344a; font-weight: 800; }
+
+    .activity-list { display: grid; gap: 0.55rem; margin-top: 0.8rem; }
+    .activity-item { display: flex; align-items: center; gap: 0.55rem; color: #59677a; font-size: 0.66rem; }
+    .activity-icon { width: 1.55rem; height: 1.55rem; display: inline-flex; align-items: center; justify-content: center; border-radius: 50%; color: #2f8b57; background: #e6f5eb; font-size: 0.62rem; font-weight: 900; }
+    .activity-time { display: block; margin-top: 0.12rem; color: #a0a9b7; font-size: 0.55rem; }
+
+    .toolbar {
+      padding: 0.55rem;
+      gap: 0.5rem;
+      margin-bottom: 0.85rem;
+      border-radius: 0.55rem;
+      background: #ffffff;
+      border: 1px solid #e3e7f0;
+      box-shadow: 0 3px 10px rgba(40, 52, 84, 0.04);
+    }
+
+    .search-wrap input { padding: 0.65rem 0.7rem 0.65rem 2.2rem; border-radius: 0.4rem; background: #f8f9fc; font-size: 0.7rem; }
+    .filter-btn { padding: 0.62rem 0.72rem; border-radius: 0.4rem; font-size: 0.62rem; }
+    .primary-btn { padding: 0.65rem 0.8rem; border-radius: 0.4rem; background: #2f8b57; box-shadow: none; font-size: 0.65rem; }
+
+    .panel,
+    .section-panel {
+      border-radius: 0.6rem;
+      border: 1px solid #e2e6ef;
+      box-shadow: 0 3px 12px rgba(40, 52, 84, 0.05);
+      background: #ffffff;
+    }
+
+    .panel::before { display: none; }
+    th,      td { padding: 0.78rem 0.85rem; }
+    thead th { background: #fafbfe; font-size: 0.6rem; }
+    .program-name { font-size: 0.75rem; }
+    .program-sub, .code-badge, .duration-badge { font-size: 0.62rem; }
+    .level-chip { font-size: 0.57rem; padding: 0.3rem 0.45rem; }
+    .table-footer { padding: 0.7rem 0.85rem; font-size: 0.58rem; background: #fafbfe; }
+
+    .section-panel {
+      margin-top: 0.85rem;
+      padding: 1rem;
+    }
+
+    .section-panel::before { height: 2px; background: #57b8a7; }
+    .section-header h2 { font-size: 1.35rem; letter-spacing: -0.04em; }
+    .section-header p { font-size: 0.68rem; }
+    .eyebrow { font-size: 0.58rem; color: #2f8b57; }
+    .vista-badge { padding: 0.4rem 0.6rem; font-size: 0.56rem; }
+    .composer { padding: 0.75rem; border-radius: 0.55rem; background: #f7f8fc; }
+    .field label, .upload-format { font-size: 0.58rem; }
+    .field textarea, .field input, .field select { padding: 0.65rem; border-radius: 0.4rem; font-size: 0.7rem; }
+    .publish-btn { height: 2.7rem; border-radius: 0.4rem; background: #2f8b57; box-shadow: none; font-size: 0.68rem; }
+    .evidence-card { border-radius: 0.55rem; box-shadow: none; }
+    .evidence-card::before { height: 2px; background: #57b8a7; }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 1rem;
+      background: rgba(26, 37, 62, 0.42);
+      z-index: 40;
+    }
+
+    .modal-backdrop.open { display: flex; }
+
+    .program-modal {
+      width: min(100%, 560px);
+      padding: 1.35rem;
+      border: 1px solid #e1e6f0;
+      border-radius: 0.75rem;
+      background: #ffffff;
+      box-shadow: 0 24px 70px rgba(31, 42, 68, 0.22);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    .modal-header h2 {
+      margin: 0;
+      color: #26344a;
+      font-family: 'Outfit', sans-serif;
+      font-size: 1.35rem;
+    }
+
+    .modal-header p {
+      margin: 0.25rem 0 0;
+      color: #8b96a8;
+      font-size: 0.7rem;
+    }
+
+    .modal-close {
+      width: 2rem;
+      height: 2rem;
+      border: 0;
+      border-radius: 0.4rem;
+      background: #f1f4f9;
+      color: #66748a;
+      cursor: pointer;
+      font-size: 1.1rem;
+    }
+
+    .program-form {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem;
+    }
+
+    .program-form .field:first-child,
+    .program-form .field:nth-child(4) { grid-column: 1 / -1; }
+
+    .program-form .field input,
+    .program-form .field select { font-size: 0.75rem; }
+
+    .modal-actions {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .modal-actions button {
+      padding: 0.7rem 0.9rem;
+      border: 0;
+      border-radius: 0.4rem;
+      cursor: pointer;
+      font-size: 0.7rem;
+      font-weight: 800;
+    }
+
+    .cancel-btn { color: #657187; background: #f1f4f9; }
+    .save-program-btn { color: #ffffff; background: #2f8b57; }
+
+    .theme-toggle {
+      width: 100%;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.45rem;
+      margin-bottom: 0.55rem;
+      padding: 0.62rem 0.7rem;
+      border: 1px solid #e2e7ef;
+      border-radius: 0.55rem;
+      background: #ffffff;
+      color: #637187;
+      cursor: pointer;
+      font-size: 0.64rem;
+      font-weight: 800;
+    }
+
+    /* Keep navigation visible while the document scrolls. */
+    .sidebar {
+      position: sticky;
+      top: 0;
+      align-self: flex-start;
+      height: 100vh;
+      max-height: 100vh;
+      overflow-y: auto;
+      scrollbar-width: thin;
+    }
+
+    .main {
+      min-height: 100vh;
+      overflow-y: visible;
+    }
+
+    body.dark-mode {
+      background: #0d1712;
+      color: #e6f2e9;
+    }
+
+    body.dark-mode .dashboard,
+    body.dark-mode .main { background: #111d17; }
+    body.dark-mode .sidebar { background: #0b1510; border-color: #25382b; }
+    body.dark-mode .brand { border-color: #24372a; }
+    body.dark-mode .brand-text { color: #f2fbf4; }
+    body.dark-mode .brand-sub,
+    body.dark-mode .user-name { color: #9eb2a4; }
+    body.dark-mode .nav-item { color: #9eb5a5; }
+    body.dark-mode .nav-item:hover,
+    body.dark-mode .nav-item.active { color: #9ce0ae; background: #173323; }
+    body.dark-mode .nav-number,
+    body.dark-mode .nav-item.active .nav-number { color: #75c98c; }
+    body.dark-mode .user-box,
+    body.dark-mode .theme-toggle { background: #14251a; border-color: #2a4432; }
+    body.dark-mode .theme-toggle { color: #c2e5ca; }
+    body.dark-mode .logout-btn { background: #101f15; border-color: #2a4432; color: #b4c8b9; }
+    body.dark-mode .hero { border-color: #294733; }
+    body.dark-mode .hero-overlay { background: linear-gradient(90deg, rgba(7, 28, 15, 0.9), rgba(7, 28, 15, 0.25)); }
+    body.dark-mode .stat-card,
+    body.dark-mode .insight-card,
+    body.dark-mode .toolbar,
+    body.dark-mode .panel,
+    body.dark-mode .section-panel,
+    body.dark-mode .evidence-card { background: #17251b; border-color: #2a4432; box-shadow: 0 5px 18px rgba(0,0,0,0.16); }
+    body.dark-mode .stat-label,
+    body.dark-mode .insight-subtitle,
+    body.dark-mode .section-header p,
+    body.dark-mode .chart-legend,
+    body.dark-mode .activity-time { color: #91aa99; }
+    body.dark-mode .pie-chart::after { background: #17251b; }
+    body.dark-mode .legend-count { color: #e8f5eb; }
+    body.dark-mode .insight-title,
+    body.dark-mode .section-header h2,
+    body.dark-mode .insight-total,
+    body.dark-mode .program-name { color: #e8f5eb; }
+    body.dark-mode .activity-item { color: #bdd3c2; }
+    body.dark-mode .search-wrap input,
+    body.dark-mode .field input,
+    body.dark-mode .field textarea,
+    body.dark-mode .field select,
+    body.dark-mode .evidence-selector select { background: #102017; border-color: #315039; color: #e6f2e9; }
+    body.dark-mode .filter-btn { background: #14251a; border-color: #2d4935; color: #b7cfbc; }
+    body.dark-mode .filter-btn.active { background: #2f8b57; color: #ffffff; }
+    body.dark-mode thead th,
+    body.dark-mode .table-footer { background: #122119; color: #9db4a2; }
+    body.dark-mode th,
+    body.dark-mode td { border-color: #294331; }
+    body.dark-mode .program-sub,
+    body.dark-mode .evidence-date { color: #8fa796; }
+    body.dark-mode .code-badge { background: #223629; color: #b9d4bf; border-color: #34533e; }
+    body.dark-mode .evidence-description { background: #122119; color: #b6cdbb; border-color: #294331; }
+    body.dark-mode .composer { background: #122119; border-color: #294331; }
+    body.dark-mode .modal-backdrop { background: rgba(1, 8, 4, 0.72); }
+    body.dark-mode .program-modal { background: #17251b; border-color: #315039; }
+    body.dark-mode .modal-header h2 { color: #e8f5eb; }
+    body.dark-mode .modal-header p { color: #9bb39f; }
+    body.dark-mode .modal-close,
+    body.dark-mode .cancel-btn { background: #223629; color: #bdd5c2; }
+    body.dark-mode .toast { background: #2f8b57; }
+
+    @media (max-width: 900px) {
+      .sidebar {
+        position: sticky;
+        top: 0;
+        width: 100%;
+        min-width: 100%;
+        height: auto;
+        max-height: none;
+        overflow: visible;
+        align-self: auto;
+        z-index: 10;
+      }
+      .brand { margin-bottom: 0.5rem; }
+      .nav { flex-direction: row; overflow-x: auto; }
+      .nav-item { white-space: nowrap; }
+    }
+
+    @media (min-width: 561px) and (max-width: 900px) {
+      .dashboard { flex-direction: row; }
+      .sidebar {
+        width: 214px;
+        min-width: 214px;
+        border-right: 1px solid #e2e6f0;
+        border-bottom: 0;
+      }
+      .nav { flex-direction: column; overflow: visible; }
+      .nav-item { white-space: normal; }
+      .main { min-width: 0; padding: 1rem; }
+    }
+
+    @media (max-width: 560px) {
+      .program-form { grid-template-columns: 1fr; }
+      .program-form .field:first-child,
+      .program-form .field:nth-child(4) { grid-column: auto; }
     }
   </style>
-
-  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
-  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
 <body>
-  <div id="root"></div>
-
-  <script type="text/babel">
-    const { useState, useEffect } = React;
-
-    const AREAS = [
-      "Tecnología de la Información y las Comunicaciones",
-      "Finanzas y Administración",
-      "Industria de la Alimentación",
-      "Educación",
-      "Turismo, Hotelería y Restauración",
-      "Electricidad y Energía",
-      "Mecánica",
-      "Trabajo Social y Desarrollo Comunitario",
-      "Comunicación, Arte y Diseño",
-      "Gestión del Talento Humano",
-      "Construcción e Infraestructura",
-      "Comercio, Marketing y Logística",
-      "Otra",
-    ];
-
-    const EMPTY_PROGRAM = {
-      name: "",
-      code: "",
-      duration: "",
-      level: "Técnico",
-      area: "",
-      description: "",
-      skills: [],
-      modalidad: "Presencial",
-      titulacion: "",
-    };
-
-    const HERO_PROGRAM_IMAGES = [
-      { url: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1800&q=85", label: "Tecnología y desarrollo" },
-      { url: "https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1800&q=85", label: "Gastronomía y alimentos" },
-      { url: "https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1800&q=85", label: "Electricidad y energía" },
-      { url: "https://images.unsplash.com/photo-1503387762-592dea58ef21?auto=format&fit=crop&w=1800&q=85", label: "Construcción e infraestructura" },
-    ];
-
-    const INITIAL_PROGRAMS = [
-      {
-        id: "p_1",
-        name: "Análisis y Desarrollo de Software",
-        code: "228118",
-        duration: "24 meses",
-        level: "Tecnólogo",
-        area: "Tecnología de la Información y las Comunicaciones",
-        description: "Formación integral en desarrollo web, aplicaciones móviles, bases de datos y arquitectura de software.",
-        skills: ["JavaScript", "Python", "Bases de Datos", "Metodologías Ágiles"],
-        modalidad: "Presencial",
-        titulacion: "Tecnólogo en Análisis y Desarrollo de Software"
-      },
-      {
-        id: "p_2",
-        name: "Mantenimiento de Equipos de Cómputo",
-        code: "228119",
-        duration: "12 meses",
-        level: "Técnico",
-        area: "Tecnología de la Información y las Comunicaciones",
-        description: "Diagnóstico, ensamble, mantenimiento preventivo/correctivo y configuración de redes locales.",
-        skills: ["Mantenimiento Hardware", "Redes LAN", "Sistemas Operativos"],
-        modalidad: "Presencial",
-        titulacion: "Técnico en Sistemas"
-      },
-      {
-        id: "p_3",
-        name: "Gastronomía y Cocina Internacional",
-        code: "634101",
-        duration: "12 meses",
-        level: "Técnico",
-        area: "Industria de la Alimentación",
-        description: "Preparación de alimentos, técnicas culinarias profesionales, higiene y manipulación.",
-        skills: ["Técnicas Culinarias", "Manipulación de Alimentos", "Repostería"],
-        modalidad: "Presencial",
-        titulacion: "Técnico en Cocina"
-      },
-      {
-        id: "p_4",
-        name: "Electricidad Industrial",
-        code: "821201",
-        duration: "24 meses",
-        level: "Tecnólogo",
-        area: "Electricidad y Energía",
-        description: "Montaje, automatización y mantenimiento de sistemas eléctricos en entornos industriales.",
-        skills: ["Tableros Eléctricos", "PLCs", "Automatización"],
-        modalidad: "Presencial",
-        titulacion: "Tecnólogo en Electricidad Industrial"
-      }
-    ];
-
-    const INITIAL_EVIDENCE = [
-      {
-        id: "e_1",
-        fileName: "Jornada_Tecnologia_2026.jpg",
-        fileType: "image/jpeg",
-        fileData: "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80",
-        description: "Jornada práctica de capacitación en desarrollo de software y nuevas tecnologías.",
-        createdAt: new Date().toISOString()
-      }
-    ];
-
-    function loadPrograms() {
-      const stored = localStorage.getItem("sena_programs");
-      if (stored) {
-        try { return JSON.parse(stored); } catch (e) {}
-      }
-      return INITIAL_PROGRAMS;
-    }
-
-    function savePrograms(programs) {
-      localStorage.setItem("sena_programs", JSON.stringify(programs));
-    }
-
-    function loadEvidence() {
-      const stored = localStorage.getItem("sena_evidence");
-      if (stored) {
-        try { return JSON.parse(stored); } catch (e) {}
-      }
-      return INITIAL_EVIDENCE;
-    }
-
-    function saveEvidence(evidence) {
-      localStorage.setItem("sena_evidence", JSON.stringify(evidence));
-    }
-
-    function SenaLogo({ size = 36 }) {
-      return (
-        <svg width={size} height={size} viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="rounded-full shadow-sm flex-shrink-0">
-          <circle cx="50" cy="50" r="50" fill="#39A900" />
-          <circle cx="50" cy="30" r="10" fill="#FFFFFF" />
-          <path d="M50 45 L25 80 L38 80 L50 62 L62 80 L75 80 Z" fill="#FFFFFF" />
-          <circle cx="50" cy="52" r="4" fill="#39A900" />
-        </svg>
-      );
-    }
-
-    function ProgramModal({ initial, onSave, onClose }) {
-      const [form, setForm] = useState(initial ? { ...initial } : { ...EMPTY_PROGRAM });
-      const [skillInput, setSkillInput] = useState("");
-      const [errors, setErrors] = useState({});
-
-      function set(key, value) {
-        setForm((f) => ({ ...f, [key]: value }));
-        setErrors((e) => ({ ...e, [key]: "" }));
-      }
-
-      function addSkill() {
-        const s = skillInput.trim();
-        if (s && !form.skills.includes(s)) {
-          set("skills", [...form.skills, s]);
-        }
-        setSkillInput("");
-      }
-
-      function removeSkill(s) {
-        set("skills", form.skills.filter((x) => x !== s));
-      }
-
-      function validate() {
-        const e = {};
-        if (!form.name.trim()) e.name = "Nombre requerido";
-        if (!form.code.trim()) e.code = "Código requerido";
-        if (!form.duration.trim()) e.duration = "Duración requerida";
-        if (!form.area.trim()) e.area = "Área requerida";
-        if (!form.description.trim()) e.description = "Descripción requerida";
-        if (!form.titulacion.trim()) e.titulacion = "Titulación requerida";
-        setErrors(e);
-        return Object.keys(e).length === 0;
-      }
-
-      function handleSave() {
-        if (!validate()) return;
-        onSave({ ...form, id: initial?.id ?? `p_${Date.now()}` });
-      }
-
-      return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="bg-white rounded-3xl w-full max-w-2xl max-h-[92vh] overflow-y-auto shadow-2xl">
-            <div className="sticky top-0 bg-white border-b border-gray-100 px-6 py-4 flex items-center justify-between rounded-t-3xl z-10">
-              <h2 className="font-display font-800 text-lg text-gray-900" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>
-                {initial ? "Editar programa" : "Nuevo programa"}
-              </h2>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center hover:bg-gray-200 transition-colors">
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M2 2l10 10M12 2L2 12" stroke="#374151" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-              </button>
+  <div class="page-shell">
+    <div class="dashboard">
+      <aside class="sidebar">
+        <div>
+          <div class="brand">
+            <div class="brand-mark">
+              <img src="sena logo.jpg" alt="Logo del SENA" />
             </div>
-
-            <div className="p-6 space-y-5">
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">Nivel de formación</label>
-                <div className="flex gap-2">
-                  {["Técnico", "Tecnólogo"].map((lvl) => (
-                    <button
-                      key={lvl}
-                      type="button"
-                      onClick={() => set("level", lvl)}
-                      className="flex-1 py-2.5 rounded-xl text-sm font-semibold border-2 transition-all duration-150"
-                      style={{
-                        borderColor: form.level === lvl ? "#39A900" : "#e5e7eb",
-                        background: form.level === lvl ? "#e8f7de" : "white",
-                        color: form.level === lvl ? "#2d8400" : "#6b7280",
-                      }}
-                    >
-                      {lvl}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Nombre del programa *</label>
-                  <input
-                    value={form.name}
-                    onChange={(e) => set("name", e.target.value)}
-                    placeholder="Ej: Técnica en Sistemas"
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 focus:ring-2 focus:ring-green-50"
-                    style={{ borderColor: errors.name ? "#ef4444" : "#e5e7eb" }}
-                  />
-                  {errors.name && <p className="text-xs text-red-500 mt-1">{errors.name}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Código SENA *</label>
-                  <input
-                    value={form.code}
-                    onChange={(e) => set("code", e.target.value)}
-                    placeholder="Ej: 228118"
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 focus:ring-2 focus:ring-green-50"
-                    style={{ borderColor: errors.code ? "#ef4444" : "#e5e7eb" }}
-                  />
-                  {errors.code && <p className="text-xs text-red-500 mt-1">{errors.code}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="md:col-span-2">
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Área de conocimiento *</label>
-                  <select
-                    value={form.area}
-                    onChange={(e) => set("area", e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 bg-white"
-                    style={{ borderColor: errors.area ? "#ef4444" : "#e5e7eb" }}
-                  >
-                    <option value="">Selecciona un área</option>
-                    {AREAS.map((a) => <option key={a} value={a}>{a}</option>)}
-                  </select>
-                  {errors.area && <p className="text-xs text-red-500 mt-1">{errors.area}</p>}
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Duración *</label>
-                  <input
-                    value={form.duration}
-                    onChange={(e) => set("duration", e.target.value)}
-                    placeholder="Ej: 12 meses"
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 focus:ring-2 focus:ring-green-50"
-                    style={{ borderColor: errors.duration ? "#ef4444" : "#e5e7eb" }}
-                  />
-                  {errors.duration && <p className="text-xs text-red-500 mt-1">{errors.duration}</p>}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Modalidad</label>
-                  <select
-                    value={form.modalidad}
-                    onChange={(e) => set("modalidad", e.target.value)}
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 bg-white"
-                  >
-                    <option>Presencial</option>
-                    <option>Virtual</option>
-                    <option>A distancia</option>
-                    <option>Presencial / Virtual</option>
-                    <option>Presencial / A distancia</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Titulación *</label>
-                  <input
-                    value={form.titulacion}
-                    onChange={(e) => set("titulacion", e.target.value)}
-                    placeholder="Ej: Técnico en Sistemas"
-                    className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 focus:ring-2 focus:ring-green-50"
-                    style={{ borderColor: errors.titulacion ? "#ef4444" : "#e5e7eb" }}
-                  />
-                  {errors.titulacion && <p className="text-xs text-red-500 mt-1">{errors.titulacion}</p>}
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Descripción del programa *</label>
-                <textarea
-                  value={form.description}
-                  onChange={(e) => set("description", e.target.value)}
-                  placeholder="Describe de qué trata el programa, qué forma y para qué perfil..."
-                  rows={3}
-                  className="w-full px-3.5 py-2.5 rounded-xl border text-sm outline-none transition-all focus:border-green-400 focus:ring-2 focus:ring-green-50 resize-none"
-                  style={{ borderColor: errors.description ? "#ef4444" : "#e5e7eb" }}
-                />
-                {errors.description && <p className="text-xs text-red-500 mt-1">{errors.description}</p>}
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1.5">Competencias clave</label>
-                <div className="flex gap-2 mb-2">
-                  <input
-                    value={skillInput}
-                    onChange={(e) => setSkillInput(e.target.value)}
-                    onKeyDown={(e) => e.key === "Enter" && (e.preventDefault(), addSkill())}
-                    placeholder="Escribe y presiona Enter o +"
-                    className="flex-1 px-3.5 py-2 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 transition-all"
-                  />
-                  <button
-                    type="button"
-                    onClick={addSkill}
-                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-opacity hover:opacity-80"
-                    style={{ background: "#39A900" }}
-                  >
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                    </svg>
-                  </button>
-                </div>
-                {form.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-1.5">
-                    {form.skills.map((s) => (
-                      <span key={s} className="flex items-center gap-1.5 text-xs bg-green-50 text-green-800 border border-green-100 px-2.5 py-1 rounded-full">
-                        {s}
-                        <button onClick={() => removeSkill(s)} className="text-green-600 hover:text-red-500 transition-colors">
-                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                            <path d="M2 2l6 6M8 2L2 8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                          </svg>
-                        </button>
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="sticky bottom-0 bg-white border-t border-gray-100 px-6 py-4 flex gap-3 rounded-b-3xl">
-              <button onClick={onClose} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-                Cancelar
-              </button>
-              <button onClick={handleSave} className="flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90" style={{ background: "#39A900", color: "white" }}>
-                {initial ? "Guardar cambios" : "Crear programa"}
-              </button>
+            <div>
+              <div class="brand-text">DAJESA</div>
+              <div class="brand-sub">Control administrativo</div>
             </div>
           </div>
-        </div>
-      );
-    }
 
-    function DeleteConfirm({ name, onConfirm, onCancel }) {
-      return (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4" style={{ background: "rgba(0,0,0,0.5)" }}>
-          <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl">
-            <div className="w-12 h-12 rounded-2xl bg-red-50 flex items-center justify-center mx-auto mb-4">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M3 6h18M8 6V4h8v2M19 6l-1 14H6L5 6" stroke="#ef4444" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            </div>
-            <h3 className="font-display font-700 text-gray-900 text-center mb-2" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 700 }}>¿Eliminar programa?</h3>
-            <p className="text-sm text-gray-500 text-center mb-5">
-              Se eliminará <strong>"{name}"</strong> permanentemente. Esta acción no se puede deshacer.
-            </p>
-            <div className="flex gap-2">
-              <button onClick={onCancel} className="flex-1 py-2.5 rounded-xl text-sm font-semibold border border-gray-200 text-gray-600 hover:bg-gray-50 transition-colors">
-                Cancelar
-              </button>
-              <button onClick={onConfirm} className="flex-1 py-2.5 rounded-xl text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-colors">
-                Eliminar
-              </button>
-            </div>
+          <nav class="nav" aria-label="Navegación administrativa">
+            <a class="nav-item active" href="#resumen"><span class="nav-number">01</span>Resumen</a>
+            <a class="nav-item" href="#programas"><span class="nav-number">02</span>Programas</a>
+            <a class="nav-item" href="#evidencias"><span class="nav-number">03</span>Evidencias</a>
+          </nav>
+        </div>
+
+        <div>
+          <div class="user-box">
+            <div class="avatar">A</div>
+            <div class="user-name">Administrador SENA</div>
           </div>
+          <button type="button" class="theme-toggle" id="themeToggle" aria-pressed="false">
+            <span aria-hidden="true">◐</span>
+            <span id="themeLabel">Modo oscuro</span>
+          </button>
+          <button type="button" class="logout-btn">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M5 7h7M9 5l2 2-2 2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              <path d="M8 3V2H2v10h6v-1" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Cerrar sesión
+          </button>
         </div>
-      );
-    }
+      </aside>
 
-    function AdminDashboard({ programs, onUpdate, evidence, onEvidenceUpdate, user, onLogout }) {
-      const [modal, setModal] = useState(null);
-      const [deleteTarget, setDeleteTarget] = useState(null);
-      const [search, setSearch] = useState("");
-      const [filterLevel, setFilterLevel] = useState("all");
-      const [toast, setToast] = useState(null);
-      const [evidenceDescription, setEvidenceDescription] = useState("");
-      const [fileInputKey, setFileInputKey] = useState(0);
-      const [selectedEvidenceFile, setSelectedEvidenceFile] = useState(null);
-      const [selectedEvidenceProgram, setSelectedEvidenceProgram] = useState("general");
-      const [heroImageIndex, setHeroImageIndex] = useState(0);
+      <main class="main" id="resumen">
+        <section class="hero" aria-label="Resumen del centro">
+          <div class="hero-slide active" style="background-image: url('https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=1800&q=85');"></div>
+          <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=1800&q=85');"></div>
+          <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1509391366360-2e959784a276?auto=format&fit=crop&w=1800&q=85');"></div>
+          <div class="hero-slide" style="background-image: url('https://images.unsplash.com/photo-1503387762-592dea58ef21?auto=format&fit=crop&w=1800&q=85');"></div>
+          <div class="hero-overlay"></div>
 
-      useEffect(() => {
-        const timer = window.setInterval(() => {
-          setHeroImageIndex((current) => (current + 1) % HERO_PROGRAM_IMAGES.length);
-        }, 5000);
-        return () => window.clearInterval(timer);
-      }, []);
+          <div class="hero-content">
+            <div class="live-tag">Centro de control</div>
+            <h1>La oferta educativa,<br><span class="accent">bajo control.</span></h1>
+            <p>Administra programas, publica actividades generales y organiza evidencias dentro de cada programa de formación.</p>
+          </div>
 
-      const tecnicas = programs.filter((p) => p.level === "Técnico");
-      const tecnologias = programs.filter((p) => p.level === "Tecnólogo");
-      const selectedProgram = programs.find((program) => program.id === selectedEvidenceProgram);
-      const visibleEvidence = evidence.filter((item) =>
-        selectedEvidenceProgram === "general"
-          ? !item.programId
-          : item.programId === selectedEvidenceProgram
-      );
+          <div class="hero-caption">Tecnología y desarrollo</div>
+          <div class="hero-dots" aria-label="Cambiar imagen">
+            <button type="button" class="hero-dot active" aria-label="Slide 1"></button>
+            <button type="button" class="hero-dot" aria-label="Slide 2"></button>
+            <button type="button" class="hero-dot" aria-label="Slide 3"></button>
+            <button type="button" class="hero-dot" aria-label="Slide 4"></button>
+          </div>
+        </section>
 
-      const filtered = programs.filter((p) => {
-        const matchSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
-          p.area.toLowerCase().includes(search.toLowerCase()) ||
-          p.code.includes(search);
-        const matchLevel = filterLevel === "all" || p.level === filterLevel;
-        return matchSearch && matchLevel;
-      });
+        <section class="stats-grid" aria-label="Estadísticas">
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e8f7de; color:#1f7a36;">19</div>
+            <div class="stat-label">Total programas</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#e4f4e9; color:#2f8b57;">3</div>
+            <div class="stat-label">Operarios</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#fef3c7; color:#b45309;">6</div>
+            <div class="stat-label">Técnicos</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon" style="background:#f3e8ff; color:#7c3aed;">7</div>
+            <div class="stat-label">Tecnólogos</div>
+          </div>
+        </section>
 
-      function showToast(msg) {
-        setToast(msg);
-        setTimeout(() => setToast(null), 3000);
-      }
-
-      function handleSave(p) {
-        let updated;
-        if (modal?.type === "edit") {
-          updated = programs.map((x) => x.id === p.id ? p : x);
-          showToast("Programa actualizado correctamente");
-        } else {
-          updated = [...programs, p];
-          showToast("Programa creado correctamente");
-        }
-        savePrograms(updated);
-        onUpdate(updated);
-        setModal(null);
-      }
-
-      function handleDelete(p) {
-        const updated = programs.filter((x) => x.id !== p.id);
-        const evidenceWithoutProgram = evidence.filter((item) => item.programId !== p.id);
-        savePrograms(updated);
-        saveEvidence(evidenceWithoutProgram);
-        onUpdate(updated);
-        onEvidenceUpdate(evidenceWithoutProgram);
-        if (selectedEvidenceProgram === p.id) setSelectedEvidenceProgram("general");
-        setDeleteTarget(null);
-        showToast("Programa eliminado");
-      }
-
-      function handleEvidenceUpload() {
-        const file = selectedEvidenceFile;
-        if (!file) return;
-        if (!evidenceDescription.trim()) {
-          showToast("Escribe una descripción para la evidencia");
-          return;
-        }
-        if (file.size > 5 * 1024 * 1024) {
-          showToast("El archivo no puede superar 5 MB");
-          return;
-        }
-
-        const reader = new FileReader();
-        reader.onload = () => {
-          const item = {
-            id: `e_${Date.now()}`,
-            ...(selectedProgram ? { programId: selectedProgram.id } : {}),
-            fileName: file.name,
-            fileType: file.type || "application/octet-stream",
-            fileData: String(reader.result),
-            description: evidenceDescription.trim(),
-            createdAt: new Date().toISOString(),
-          };
-          const updated = [item, ...evidence];
-          saveEvidence(updated);
-          onEvidenceUpdate(updated);
-          setEvidenceDescription("");
-          setSelectedEvidenceFile(null);
-          setFileInputKey((key) => key + 1);
-          showToast(selectedProgram ? "Evidencia asignada al programa" : "Evidencia general publicada");
-        };
-        reader.readAsDataURL(file);
-      }
-
-      function handleEvidenceDelete(id) {
-        const updated = evidence.filter((item) => item.id !== id);
-        saveEvidence(updated);
-        onEvidenceUpdate(updated);
-        showToast("Evidencia eliminada");
-      }
-
-      return (
-        <div className="min-h-screen admin-shell">
-          <div className="admin-layout">
-            <header className="admin-topbar z-30 shadow-md">
-              <div className="admin-sidebar-inner">
-                <div>
-                  <div className="flex items-center gap-3 mb-6">
-                    <div className="admin-logo-frame float-logo">
-                      <SenaLogo size={42} />
-                    </div>
-                    <div>
-                      <p className="font-display font-800 text-white text-sm leading-none" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>DAJESA</p>
-                      <p className="text-[11px] text-white/60 mt-1">Control administrativo</p>
-                    </div>
-                  </div>
-
-                  <nav className="admin-nav" aria-label="Navegación administrativa">
-                    <a href="#resumen" className="admin-nav-link active"><span className="admin-nav-icon">01</span>Resumen</a>
-                    <a href="#programas" className="admin-nav-link"><span className="admin-nav-icon">02</span>Programas</a>
-                    <a href="#evidencias" className="admin-nav-link"><span className="admin-nav-icon">03</span>Evidencias</a>
-                  </nav>
-                </div>
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex items-center gap-2 admin-user-chip justify-center">
-                    <div className="w-8 h-8 rounded-full bg-lime-400 flex items-center justify-center text-[#17321a] text-xs font-bold">
-                      {user.name[0]}
-                    </div>
-                    <span className="text-[11px] font-semibold text-white/90">{user.name}</span>
-                  </div>
-                  <button onClick={onLogout} className="admin-logout flex items-center justify-center gap-1.5 px-3 py-2.5 rounded-xl text-xs font-semibold transition-colors cursor-pointer">
-                    <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                      <path d="M5 7h7M9 5l2 2-2 2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
-                      <path d="M8 3V2H2v10h6v-1" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                    </svg>
-                    Cerrar sesión
-                  </button>
-                </div>
+        <section class="insights-grid" aria-label="Indicadores del centro">
+          <article class="insight-card">
+            <div class="insight-header">
+              <div>
+                <p class="insight-title">Programas activos por área</p>
+                <p class="insight-subtitle" id="trackingSubtitle">Distribución del catálogo activo</p>
               </div>
-            </header>
+              <div class="insight-total" id="trackingTotal">0 activos</div>
+            </div>
+            <div class="pie-layout">
+              <div class="pie-chart" id="programAreaChart" role="img" aria-label="Programas activos agrupados por área"></div>
+              <div class="chart-legend" id="programAreaLegend"></div>
+            </div>
+          </article>
 
-            <main id="resumen" className="admin-main max-w-7xl mx-auto px-4 py-8 md:py-10">
-            <div className="admin-hero mb-8 rounded-[2rem] p-6 md:p-9 text-white overflow-hidden relative shadow-lg">
-              {HERO_PROGRAM_IMAGES.map((image, index) => (
-                <div
-                  key={image.url}
-                  className={`admin-hero-image absolute inset-0 ${index === heroImageIndex ? "is-active" : ""}`}
-                  style={{ backgroundImage: `url(${image.url})` }}
-                  aria-hidden="true"
-                />
-              ))}
-              <div className="admin-hero-overlay absolute inset-0" />
-              <div className="relative z-10 max-w-2xl">
-                <div className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] text-lime-200 font-semibold"><span className="admin-live-dot" /> Centro de control</div>
-                <h1 className="font-display text-3xl md:text-4xl font-800 mt-3" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>La oferta educativa,<br /><span className="text-yellow-300">bajo control.</span></h1>
-                <p className="text-sm text-white/80 mt-3 max-w-xl leading-relaxed">Administra programas, publica actividades generales y organiza evidencias dentro de cada programa de formación.</p>
+          <article class="insight-card">
+            <div class="insight-header">
+              <div>
+                <p class="insight-title">Actividad reciente</p>
+                <p class="insight-subtitle">Últimos movimientos del panel</p>
               </div>
-              <div className="admin-hero-caption absolute bottom-5 left-6 md:left-9 z-10 text-[11px] uppercase tracking-[0.14em] text-white/60">{HERO_PROGRAM_IMAGES[heroImageIndex].label}</div>
-              <div className="admin-hero-dots absolute bottom-5 right-6 md:right-9 z-10 flex items-center gap-2">
-                {HERO_PROGRAM_IMAGES.map((image, index) => (
-                  <button
-                    key={image.label}
-                    type="button"
-                    aria-label={`Mostrar imagen: ${image.label}`}
-                    onClick={() => setHeroImageIndex(index)}
-                    className={`admin-hero-dot ${index === heroImageIndex ? "is-active" : ""}`}
-                  />
-                ))}
-              </div>
-              <div className="admin-hero-mark absolute right-8 md:right-20 top-1/2 -translate-y-1/2 hidden sm:flex">SENA</div>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div class="activity-item"><span class="activity-icon">+</span><span>Nuevo programa registrado<small class="activity-time">Hace 2 horas</small></span></div>
+              <div class="activity-item"><span class="activity-icon">✓</span><span>Evidencia publicada<small class="activity-time">Hace 4 horas</small></span></div>
+              <div class="activity-item"><span class="activity-icon">↗</span><span>Reporte actualizado<small class="activity-time">Ayer</small></span></div>
+            </div>
+          </article>
+        </section>
+
+        <section class="toolbar" aria-label="Herramientas de búsqueda">
+          <div class="search-wrap">
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+              <circle cx="7" cy="7" r="5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M11 11L14.5 14.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            <input type="text" id="searchInput" placeholder="Buscar por nombre, código o área..." />
+          </div>
+
+          <div class="filter-group" aria-label="Filtros por nivel">
+            <button type="button" class="filter-btn active">Todos</button>
+            <button type="button" class="filter-btn">Operarios</button>
+            <button type="button" class="filter-btn">Técnico</button>
+            <button type="button" class="filter-btn">Tecnólogo</button>
+          </div>
+
+          <button type="button" class="primary-btn" id="openProgramModal">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+              <path d="M7 1v12M1 7h12" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
+            Nuevo programa
+          </button>
+        </section>
+
+        <section id="programas" class="panel" aria-label="Programas">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>Programa</th>
+                  <th>Código</th>
+                  <th>Nivel</th>
+                  <th>Área</th>
+                  <th>Duración</th>
+                  <th>Modalidad</th>
+                  <th>Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><p class="program-name">Manejo de Maquinaria de Confección Industrial para Ropa Exterior</p><div class="program-sub">Operario en confección industrial</div></td><td><span class="code-badge">OP-001</span></td><td><span class="level-chip operario">Operario</span></td><td>Confección industrial</td><td><span class="duration-badge">6 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Manejo de Maquinaria de Confección Industrial para Ropa Interior y Deportiva</p><div class="program-sub">Operario en confección industrial</div></td><td><span class="code-badge">OP-002</span></td><td><span class="level-chip operario">Operario</span></td><td>Confección industrial</td><td><span class="duration-badge">6 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Manejo de Maquinaria en Procesos de Confección Industrial en Prendas de Vestir en Dénim</p><div class="program-sub">Operario en confección industrial</div></td><td><span class="code-badge">OP-003</span></td><td><span class="level-chip operario">Operario</span></td><td>Confección industrial</td><td><span class="duration-badge">6 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Patronaje Industrial de Prendas de Vestir</p><div class="program-sub">Técnico en confección industrial</div></td><td><span class="code-badge">TC-001</span></td><td><span class="level-chip tech">Técnico</span></td><td>Diseño y confección</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Mantenimiento de Máquinas de Confección Industrial</p><div class="program-sub">Técnico en mantenimiento industrial</div></td><td><span class="code-badge">TC-002</span></td><td><span class="level-chip tech">Técnico</span></td><td>Mantenimiento industrial</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Control de Calidad en Confección Industrial</p><div class="program-sub">Técnico en control de calidad</div></td><td><span class="code-badge">TC-003</span></td><td><span class="level-chip tech">Técnico</span></td><td>Control de calidad</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Trazo y Corte Industrial de Material Textil</p><div class="program-sub">Técnico en procesos textiles</div></td><td><span class="code-badge">TC-004</span></td><td><span class="level-chip tech">Técnico</span></td><td>Procesos textiles</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Joyería Armada</p><div class="program-sub">Técnico en joyería</div></td><td><span class="code-badge">TC-005</span></td><td><span class="level-chip tech">Técnico</span></td><td>Joyería</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Elaboración de Prendas de Vestir Sobre Medidas</p><div class="program-sub">Técnico en confección</div></td><td><span class="code-badge">TC-006</span></td><td><span class="level-chip tech">Técnico</span></td><td>Confección y moda</td><td><span class="duration-badge">15 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Desarrollo de Colecciones para la Industria de la Moda</p><div class="program-sub">Tecnólogo en diseño de moda</div></td><td><span class="code-badge">TG-001</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Industria de la moda</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Gestión de Recursos en Moda Sostenible</p><div class="program-sub">Tecnólogo en moda sostenible</div></td><td><span class="code-badge">TG-002</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Moda sostenible</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Desarrollo de Procesos de Mercadeo</p><div class="program-sub">Tecnólogo en mercadeo</div></td><td><span class="code-badge">TG-003</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Mercadeo</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Análisis y Desarrollo de Software</p><div class="program-sub">Tecnólogo en desarrollo de software</div></td><td><span class="code-badge">TG-004</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Tecnologías de la información</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Desarrollo de Contenidos Digitales para el Sistema Moda</p><div class="program-sub">Tecnólogo en contenidos digitales</div></td><td><span class="code-badge">TG-005</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Contenidos digitales</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Supervisión en Procesos de Confección</p><div class="program-sub">Tecnólogo en confección industrial</div></td><td><span class="code-badge">TG-006</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Confección industrial</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Gestión del Talento Humano</p><div class="program-sub">Tecnólogo en gestión humana</div></td><td><span class="code-badge">TG-007</span></td><td><span class="level-chip tecno">Tecnólogo</span></td><td>Talento humano</td><td><span class="duration-badge">27 meses</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Formación virtual</p><div class="program-sub">Modalidad de formación</div></td><td><span class="code-badge">MOD-001</span></td><td><span class="level-chip complementaria">Modalidad</span></td><td>Formación virtual</td><td><span class="duration-badge">Variable</span></td><td>Virtual</td><td></td></tr>
+                <tr><td><p class="program-name">Formación complementaria</p><div class="program-sub">Oferta de corta duración</div></td><td><span class="code-badge">MOD-002</span></td><td><span class="level-chip complementaria">Complementaria</span></td><td>Formación complementaria</td><td><span class="duration-badge">Variable</span></td><td>Presencial</td><td></td></tr>
+                <tr><td><p class="program-name">Competencias laborales</p><div class="program-sub">Evaluación y certificación</div></td><td><span class="code-badge">MOD-003</span></td><td><span class="level-chip complementaria">Competencias</span></td><td>Certificación laboral</td><td><span class="duration-badge">Variable</span></td><td>Mixta</td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="table-footer" id="programCount">Mostrando 3 programas</div>
+        </section>
+
+        <section id="evidencias" class="section-panel" aria-label="Evidencias">
+          <div class="section-header">
+            <div>
+              <p class="eyebrow">Contenido público</p>
+              <h2>Evidencias de actividades</h2>
+              <p>Publica contenido general o asígnalo a un programa específico.</p>
+            </div>
+            <span class="vista-badge">3 en esta vista</span>
+          </div>
+
+          <div class="evidence-selector">
+            <label for="programFilter">Sección de evidencias</label>
+            <select id="programFilter">
+              <option value="general">Actividades generales del centro</option>
+            </select>
+          </div>
+
+          <div class="composer">
+            <div class="field">
+              <label for="evidenceText">Descripción breve</label>
+              <textarea id="evidenceText" placeholder="Ej: Jornada de formación práctica en el taller..."></textarea>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-              {[
-                { label: "Total programas", value: programs.length, color: "#39A900", bg: "#e8f7de" },
-                { label: "Técnicas", value: tecnicas.length, color: "#2d8400", bg: "#d1f0c2" },
-                { label: "Tecnologías", value: tecnologias.length, color: "#1a2e0f", bg: "#c8dbbe" },
-                { label: "Áreas cubiertas", value: new Set(programs.map((p) => p.area)).size, color: "#F5C800", bg: "#fef9c3" },
-              ].map((s) => (
-                <div key={s.label} className="admin-stat rounded-2xl p-4 border shadow-sm transition-all hover:shadow-md">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style={{ background: s.bg }}>
-                    <span className="text-lg font-bold" style={{ color: s.color }}>{s.value}</span>
-                  </div>
-                  <p className="text-xs text-slate-500 font-medium">{s.label}</p>
-                </div>
-              ))}
+            <div class="field">
+              <label for="fileInput">Foto o documento</label>
+              <input id="fileInput" type="file" accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx" />
+              <div class="upload-format">Tamaño máximo: 5 MB</div>
             </div>
 
-            <div className="admin-toolbar flex flex-col sm:flex-row gap-3 mb-6">
-              <div className="relative flex-1">
-                <svg className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" width="16" height="16" viewBox="0 0 16 16" fill="none">
-                  <circle cx="7" cy="7" r="5" stroke="currentColor" strokeWidth="1.5" />
-                  <path d="M11 11l3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-                </svg>
-                <input
-                  value={search}
-                  onChange={(e) => setSearch(e.target.value)}
-                  placeholder="Buscar por nombre, código o área..."
-                  className="admin-search w-full pl-9 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm outline-none transition-all focus:border-green-400 bg-white"
-                />
-              </div>
-              <div className="flex gap-2">
-                {["all", "Técnico", "Tecnólogo"].map((lvl) => (
-                  <button
-                    key={lvl}
-                    onClick={() => setFilterLevel(lvl)}
-                    className="admin-filter px-3.5 py-2 rounded-xl text-xs font-semibold transition-all cursor-pointer"
-                    style={{
-                      background: filterLevel === lvl ? "#1a2e0f" : "white",
-                      color: filterLevel === lvl ? "white" : "#6b7280",
-                      border: filterLevel === lvl ? "none" : "1px solid #e5e7eb",
-                    }}
-                  >
-                    {lvl === "all" ? "Todos" : lvl}
-                  </button>
-                ))}
-              </div>
-              <button
-                onClick={() => setModal({ type: "create" })}
-                className="admin-primary-button flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all duration-200 hover:opacity-90 whitespace-nowrap cursor-pointer"
-                style={{ background: "#39A900", color: "white" }}
-              >
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                  <path d="M7 1v12M1 7h12" stroke="white" strokeWidth="2" strokeLinecap="round" />
-                </svg>
-                Nuevo programa
-              </button>
-            </div>
+            <button type="button" class="publish-btn" id="publishEvidence">Publicar general</button>
+          </div>
 
-            <div id="programas" className="admin-panel bg-white rounded-2xl border overflow-hidden shadow-sm mb-8">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="admin-table-head">
-                      {["Programa", "Código", "Nivel", "Área", "Duración", "Modalidad", "Acciones"].map((h) => (
-                        <th key={h} className="text-left text-xs font-semibold text-gray-400 uppercase tracking-wide px-4 py-3 whitespace-nowrap">
-                          {h}
-                        </th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-50">
-                    {filtered.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="text-center py-12 text-sm text-gray-400">
-                          No se encontraron programas con los filtros actuales
-                        </td>
-                      </tr>
-                    ) : (
-                      filtered.map((p) => (
-                        <tr key={p.id} className="admin-table-row transition-colors">
-                          <td className="px-4 py-3">
-                            <p className="text-sm font-semibold text-gray-900 max-w-xs leading-snug">{p.name}</p>
-                            <p className="text-xs text-gray-400 mt-0.5 line-clamp-1">{p.titulacion}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-xs font-mono text-gray-500">{p.code}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span
-                              className="text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap"
-                              style={{
-                                background: p.level === "Tecnólogo" ? "#1a2e0f" : "#e8f7de",
-                                color: p.level === "Tecnólogo" ? "#F5C800" : "#2d8400",
-                              }}
-                            >
-                              {p.level}
-                            </span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-xs text-gray-600 max-w-[180px] leading-snug">{p.area}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <span className="text-xs font-medium text-green-700 bg-green-50 px-2 py-1 rounded-lg whitespace-nowrap">{p.duration}</span>
-                          </td>
-                          <td className="px-4 py-3">
-                            <p className="text-xs text-gray-500 whitespace-nowrap">{p.modalidad}</p>
-                          </td>
-                          <td className="px-4 py-3">
-                            <div className="flex items-center gap-1">
-                              <button onClick={() => setModal({ type: "edit", program: p })} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-blue-50 text-blue-500 transition-colors cursor-pointer" title="Editar">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                  <path d="M10 2l2 2-8 8H2v-2L10 2z" stroke="currentColor" strokeWidth="1.4" strokeLinejoin="round" />
-                                </svg>
-                              </button>
-                              <button onClick={() => setDeleteTarget(p)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-50 text-red-400 transition-colors cursor-pointer" title="Eliminar">
-                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-                                  <path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" />
-                                </svg>
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-              {filtered.length > 0 && (
-                <div className="admin-table-footer px-4 py-3 border-t border-gray-100">
-                  <p className="text-xs text-gray-400">Mostrando {filtered.length} de {programs.length} programas</p>
+          <div class="evidence-grid" id="evidenceGrid">
+            <article class="evidence-card" data-program="general">
+              <div class="evidence-head">
+                <img class="thumb" src="https://images.unsplash.com/photo-1516321318423-f06f85e504b3?auto=format&fit=crop&w=400&q=80" alt="Evidencia de tecnología" />
+                <div class="evidence-meta">
+                  <p class="evidence-name">Jornada_Tecnologia_2026.jpg</p>
+                  <div class="evidence-date">21/09/2026</div>
                 </div>
-              )}
-            </div>
-
-            <section id="evidencias" className="admin-panel bg-white rounded-3xl border shadow-sm p-5 md:p-6">
-              <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wide" style={{ color: "#39A900" }}>Contenido público</p>
-                  <h2 className="font-display font-800 text-xl text-gray-900 mt-1" style={{ fontFamily: "Outfit, sans-serif", fontWeight: 800 }}>Evidencias de actividades</h2>
-                  <p className="text-sm text-gray-500 mt-1">Publica contenido general o asígnalo a un programa específico para mantenerlo organizado.</p>
-                </div>
-                <span className="flex-shrink-0 text-xs font-semibold text-green-700 bg-green-50 px-3 py-1.5 rounded-full">{visibleEvidence.length} en esta vista</span>
-              </div>
-
-              <div className="mb-4">
-                <label htmlFor="evidence-program" className="block text-xs font-semibold text-gray-600 mb-1.5">Sección de evidencias</label>
-                <select id="evidence-program" value={selectedEvidenceProgram} onChange={(event) => setSelectedEvidenceProgram(event.target.value)} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 bg-white">
-                  <option value="general">Actividades generales del centro</option>
-                  {programs.map((program) => <option key={program.id} value={program.id}>{program.name} · {program.code}</option>)}
-                </select>
-              </div>
-
-              <div className="admin-evidence-composer grid grid-cols-1 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] gap-3 items-end p-4 rounded-2xl border border-gray-200 bg-gray-50/50">
-                <div>
-                  <label htmlFor="evidence-description" className="block text-xs font-semibold text-gray-600 mb-1.5">Descripción breve</label>
-                  <textarea id="evidence-description" value={evidenceDescription} onChange={(event) => setEvidenceDescription(event.target.value)} placeholder="Ej: Jornada de formación práctica en el taller..." rows={2} className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-sm outline-none focus:border-green-400 resize-none bg-white" />
-                </div>
-                <div>
-                  <label htmlFor={`evidence-file-${fileInputKey}`} className="block text-xs font-semibold text-gray-600 mb-1.5">Foto o documento</label>
-                  <input
-                    key={fileInputKey}
-                    id={`evidence-file-${fileInputKey}`}
-                    type="file"
-                    accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
-                    onChange={(event) => setSelectedEvidenceFile(event.target.files?.[0] ?? null)}
-                    className="w-full text-xs text-gray-500 file:mr-3 file:rounded-lg file:border-0 file:bg-green-100 file:px-3 file:py-2 file:text-xs file:font-semibold file:text-green-800 hover:file:bg-green-200"
-                  />
-                  <p className="text-[11px] text-gray-400 mt-1 truncate">{selectedEvidenceFile ? selectedEvidenceFile.name : "Tamaño máximo: 5 MB"}</p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleEvidenceUpload}
-                  disabled={!selectedEvidenceFile}
-                  className="flex items-center justify-center gap-2 px-4 h-10 rounded-xl text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed whitespace-nowrap cursor-pointer"
-                  style={{ background: "#39A900" }}
-                >
-                  <svg width="15" height="15" viewBox="0 0 17 17" fill="none"><path d="M8.5 3v8M5 7l3.5-4L12 7M3 12.5v1h11v-1" stroke="white" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
-                  {selectedProgram ? "Asignar al programa" : "Publicar general"}
+                <button type="button" class="delete-evidence" aria-label="Eliminar evidencia">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
                 </button>
               </div>
+              <p class="evidence-description">Jornada práctica de capacitación en desarrollo de software y nuevas tecnologías.</p>
+            </article>
 
-              {visibleEvidence.length > 0 && (
-                <div className="mt-5 grid grid-cols-1 md:grid-cols-2 gap-3">
-                  {visibleEvidence.map((item) => (
-                    <div key={item.id} className="admin-evidence-item flex items-center gap-3 border rounded-xl p-3 bg-white">
-                      {item.fileType.startsWith("image/") ? (
-                        <img src={item.fileData} alt="" className="w-14 h-14 rounded-lg object-cover bg-gray-50" />
-                      ) : (
-                        <div className="w-14 h-14 rounded-lg bg-green-50 flex items-center justify-center text-green-700 text-xs font-bold flex-shrink-0">DOC</div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs font-semibold text-gray-800 truncate">{item.fileName}</p>
-                        <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">{item.description}</p>
-                      </div>
-                      <button onClick={() => handleEvidenceDelete(item.id)} className="w-8 h-8 rounded-lg flex items-center justify-center hover:bg-red-50 text-red-400 transition-colors cursor-pointer" title="Eliminar evidencia" aria-label={`Eliminar ${item.fileName}`}>
-                        <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" /></svg>
-                      </button>
-                    </div>
-                  ))}
+            <article class="evidence-card" data-program="general">
+              <div class="evidence-head">
+                <div class="doc-thumb">DOC</div>
+                <div class="evidence-meta">
+                  <p class="evidence-name">Manual_induccion.pdf</p>
+                  <div class="evidence-date">18/09/2026</div>
                 </div>
-              )}
-              {visibleEvidence.length === 0 && (
-                <div className="mt-5 rounded-2xl border border-dashed border-gray-200 py-8 text-center bg-gray-50/30">
-                  <p className="text-sm font-semibold text-gray-600">Aún no hay evidencias en esta sección</p>
-                  <p className="text-xs text-gray-400 mt-1">Selecciona un archivo y agrega una descripción para publicar la primera.</p>
-                </div>
-              )}
-            </section>
-          </main>
+                <button type="button" class="delete-evidence" aria-label="Eliminar evidencia">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
+                </button>
+              </div>
+              <p class="evidence-description">Manual de inducción para estudiantes del programa de mantenimiento de equipos.</p>
+            </article>
 
+            <article class="evidence-card" data-program="general">
+              <div class="evidence-head">
+                <img class="thumb" src="https://images.unsplash.com/photo-1556910103-1c02745aae4d?auto=format&fit=crop&w=400&q=80" alt="Evidencia gastronómica" />
+                <div class="evidence-meta">
+                  <p class="evidence-name">Taller_cocina_2026.jpg</p>
+                  <div class="evidence-date">15/09/2026</div>
+                </div>
+                <button type="button" class="delete-evidence" aria-label="Eliminar evidencia">
+                  <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
+                </button>
+              </div>
+              <p class="evidence-description">Práctica culinaria con especialización en gastronomía internacional.</p>
+            </article>
           </div>
+        </section>
+      </main>
+    </div>
+  </div>
 
-          {modal && <ProgramModal initial={modal.program ?? null} onSave={handleSave} onClose={() => setModal(null)} />}
-          {deleteTarget && <DeleteConfirm name={deleteTarget.name} onConfirm={() => handleDelete(deleteTarget)} onCancel={() => setDeleteTarget(null)} />}
-
-          {toast && (
-            <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-50 px-5 py-3 rounded-2xl text-sm font-semibold text-white shadow-xl flex items-center gap-2" style={{ background: "#39A900" }}>
-              <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                <path d="M3 8l4 4 6-7" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-              {toast}
-            </div>
-          )}
+  <div class="modal-backdrop" id="programModal" role="dialog" aria-modal="true" aria-labelledby="programModalTitle">
+    <form class="program-modal" id="programForm">
+      <div class="modal-header">
+        <div>
+          <h2 id="programModalTitle">Nuevo programa</h2>
+          <p>Completa los datos para añadirlo al catálogo.</p>
         </div>
-      );
+        <button type="button" class="modal-close" id="closeProgramModal" aria-label="Cerrar formulario">&times;</button>
+      </div>
+
+      <div class="program-form">
+        <div class="field">
+          <label for="programName">Nombre del programa</label>
+          <input id="programName" name="programName" type="text" placeholder="Ej. Diseño de aplicaciones web" required />
+        </div>
+        <div class="field">
+          <label for="programCode">Código</label>
+          <input id="programCode" name="programCode" type="text" placeholder="Ej. 228120" required />
+        </div>
+        <div class="field">
+          <label for="programLevel">Nivel</label>
+          <select id="programLevel" name="programLevel" required>
+            <option value="Tecnólogo">Tecnólogo</option>
+            <option value="Técnico">Técnico</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="programArea">Área de formación</label>
+          <input id="programArea" name="programArea" type="text" placeholder="Ej. Tecnologías de la Información" required />
+        </div>
+        <div class="field">
+          <label for="programDuration">Duración</label>
+          <input id="programDuration" name="programDuration" type="text" placeholder="Ej. 18 meses" required />
+        </div>
+        <div class="field">
+          <label for="programMode">Modalidad</label>
+          <select id="programMode" name="programMode">
+            <option>Presencial</option>
+            <option>Virtual</option>
+            <option>A distancia</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-btn" id="cancelProgramModal">Cancelar</button>
+        <button type="submit" class="save-program-btn">Agregar programa</button>
+      </div>
+    </form>
+  </div>
+
+  <script>
+    const slides = Array.from(document.querySelectorAll('.hero-slide'));
+    const dots = Array.from(document.querySelectorAll('.hero-dot'));
+    const caption = document.querySelector('.hero-caption');
+    const captions = [
+      'Tecnología y desarrollo',
+      'Gastronomía y alimentos',
+      'Electricidad y energía',
+      'Construcción e infraestructura'
+    ];
+
+    let activeIndex = 0;
+
+    function updateHero(index) {
+      activeIndex = index;
+      slides.forEach((slide, i) => slide.classList.toggle('active', i === index));
+      dots.forEach((dot, i) => dot.classList.toggle('active', i === index));
+      if (caption) caption.textContent = captions[index] || '';
     }
 
-    function App() {
-      const [programs, setPrograms] = useState(loadPrograms);
-      const [evidence, setEvidence] = useState(loadEvidence);
-      const [user, setUser] = useState({ name: "Administrador SENA", role: "Coordinador Académico" });
+    dots.forEach((dot, index) => {
+      dot.addEventListener('click', () => updateHero(index));
+    });
 
-      function handleLogout() {
-        alert("Sesión cerrada correctamente");
+    setInterval(() => {
+      const nextIndex = (activeIndex + 1) % slides.length;
+      updateHero(nextIndex);
+    }, 5000);
+
+    const navItems = document.querySelectorAll('.nav-item');
+    navItems.forEach((item) => {
+      item.addEventListener('click', () => {
+        navItems.forEach((link) => link.classList.remove('active'));
+        item.classList.add('active');
+      });
+    });
+
+    const filterButtons = Array.from(document.querySelectorAll('.filter-btn'));
+    const searchInput = document.getElementById('searchInput');
+    const programTableBody = document.querySelector('#programas tbody');
+    const programCount = document.getElementById('programCount');
+    const programModal = document.getElementById('programModal');
+    const programForm = document.getElementById('programForm');
+    const programRows = () => Array.from(programTableBody.querySelectorAll('tr'));
+    const trackingTotal = document.getElementById('trackingTotal');
+    const trackingSubtitle = document.getElementById('trackingSubtitle');
+    const programAreaChart = document.getElementById('programAreaChart');
+    const programAreaLegend = document.getElementById('programAreaLegend');
+    const activityList = document.getElementById('activityList');
+    const programFilter = document.getElementById('programFilter');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeLabel = document.getElementById('themeLabel');
+    let selectedLevel = 'todos';
+
+    function applyTheme(theme) {
+      const isDark = theme === 'dark';
+      document.body.classList.toggle('dark-mode', isDark);
+      themeToggle.setAttribute('aria-pressed', String(isDark));
+      themeLabel.textContent = isDark ? 'Modo claro' : 'Modo oscuro';
+      localStorage.setItem('dajesa-theme', isDark ? 'dark' : 'light');
+    }
+
+    applyTheme(localStorage.getItem('dajesa-theme') || 'light');
+    themeToggle.addEventListener('click', () => {
+      applyTheme(document.body.classList.contains('dark-mode') ? 'light' : 'dark');
+    });
+
+    function recordActivity(label, time, symbol = '✓') {
+      const item = document.createElement('div');
+      item.className = 'activity-item';
+      item.innerHTML = `<span class="activity-icon"></span><span></span>`;
+      item.querySelector('.activity-icon').textContent = symbol;
+      item.querySelector('span:last-child').append(document.createTextNode(label));
+      const activityTime = document.createElement('small');
+      activityTime.className = 'activity-time';
+      activityTime.textContent = time;
+      item.querySelector('span:last-child').append(activityTime);
+      activityList.prepend(item);
+
+      while (activityList.children.length > 4) {
+        activityList.lastElementChild.remove();
+      }
+    }
+
+    function refreshInsights() {
+      const activeRows = programRows().filter((row) => row.dataset.active !== 'false');
+      const areas = new Map();
+
+      activeRows.forEach((row) => {
+        const area = row.querySelector('td:nth-child(4)')?.textContent.trim() || 'Sin área';
+        areas.set(area, (areas.get(area) || 0) + 1);
+      });
+
+      const totalPrograms = activeRows.length;
+      const palette = [
+        '#087f5b', '#f08c00', '#9c36b5', '#d94841',
+        '#0f766e', '#8d5524', '#d6a500', '#c2255c',
+        '#5f3dc4', '#2b8a3e', '#e8590c', '#862e9c',
+        '#20c997', '#a61e4d', '#5c940d', '#c92a2a'
+      ];
+      let currentAngle = 0;
+      const segments = [...areas.entries()].sort((first, second) => second[1] - first[1]);
+
+      if (totalPrograms === 0) {
+        programAreaChart.style.background = '#d9e3dc';
+        programAreaLegend.innerHTML = '<span class="legend-item">No hay programas activos</span>';
+      } else {
+        const gradients = segments.map(([area, count], index) => {
+          const start = currentAngle;
+          currentAngle += (count / totalPrograms) * 360;
+          const gap = segments.length > 1 ? 1 : 0;
+          return `${palette[index % palette.length]} ${start + gap}deg ${currentAngle - gap}deg`;
+        });
+        programAreaChart.style.background = `conic-gradient(${gradients.join(', ')})`;
+        programAreaLegend.innerHTML = '';
+
+        segments.forEach(([area, count], index) => {
+          const item = document.createElement('span');
+          item.className = 'legend-item';
+          const dot = document.createElement('i');
+          dot.className = 'legend-dot';
+          dot.style.background = palette[index % palette.length];
+          const label = document.createElement('span');
+          label.textContent = `${area}: `;
+          const quantity = document.createElement('strong');
+          quantity.className = 'legend-count';
+          quantity.textContent = `${count} ${count === 1 ? 'programa' : 'programas'}`;
+          label.append(quantity);
+          item.append(dot, label);
+          programAreaLegend.append(item);
+        });
       }
 
-      return (
-        <AdminDashboard
-          programs={programs}
-          onUpdate={setPrograms}
-          evidence={evidence}
-          onEvidenceUpdate={setEvidence}
-          user={user}
-          onLogout={handleLogout}
-        />
-      );
+      trackingTotal.textContent = `${totalPrograms} activos`;
+      trackingSubtitle.textContent = `${areas.size} ${areas.size === 1 ? 'área' : 'áreas'} de formación`;
     }
 
-    const root = ReactDOM.createRoot(document.getElementById("root"));
-    root.render(<App />);
+    function populateProgramFilter() {
+      const currentValue = programFilter.value;
+      programFilter.querySelectorAll('option:not(:first-child)').forEach((option) => option.remove());
+
+      programRows().forEach((row) => {
+        const name = row.querySelector('.program-name')?.textContent.trim();
+        const code = row.querySelector('.code-badge')?.textContent.trim();
+        if (!name) return;
+
+        const option = document.createElement('option');
+        option.value = code || name;
+        option.textContent = name;
+        programFilter.append(option);
+      });
+
+      if ([...programFilter.options].some((option) => option.value === currentValue)) {
+        programFilter.value = currentValue;
+      }
+    }
+
+    function normalizeText(value) {
+      return value
+        .toLocaleLowerCase('es')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '');
+    }
+
+    function filterPrograms() {
+      const searchTerm = normalizeText(searchInput.value.trim());
+      let visiblePrograms = 0;
+
+      const rows = programRows();
+      rows.forEach((row) => {
+        const rowText = normalizeText(row.textContent);
+        const level = normalizeText(row.querySelector('.level-chip')?.textContent || '');
+        const matchesSearch = !searchTerm || rowText.includes(searchTerm);
+        const matchesLevel = selectedLevel === 'todos' || level === selectedLevel;
+        const shouldShow = matchesSearch && matchesLevel;
+
+        row.hidden = !shouldShow;
+        if (shouldShow) visiblePrograms += 1;
+      });
+
+      if (programCount) {
+        programCount.textContent = visiblePrograms === 0
+          ? 'No se encontraron programas'
+          : `Mostrando ${visiblePrograms} ${visiblePrograms === 1 ? 'programa' : 'programas'}`;
+      }
+    }
+
+    filterButtons.forEach((button) => {
+      button.addEventListener('click', () => {
+        filterButtons.forEach((btn) => btn.classList.remove('active'));
+        button.classList.add('active');
+        const label = normalizeText(button.textContent.trim());
+        selectedLevel = label === 'todos' ? 'todos' : label === 'operarios' ? 'operario' : label;
+        filterPrograms();
+      });
+    });
+
+    searchInput.addEventListener('input', filterPrograms);
+    filterPrograms();
+
+    function closeProgramModal() {
+      programModal.classList.remove('open');
+      programForm.reset();
+    }
+
+    document.getElementById('openProgramModal').addEventListener('click', () => {
+      programModal.classList.add('open');
+      document.getElementById('programName').focus();
+    });
+
+    document.getElementById('closeProgramModal').addEventListener('click', closeProgramModal);
+    document.getElementById('cancelProgramModal').addEventListener('click', closeProgramModal);
+    programModal.addEventListener('click', (event) => {
+      if (event.target === programModal) closeProgramModal();
+    });
+
+    programForm.addEventListener('submit', (event) => {
+      event.preventDefault();
+      const formData = new FormData(programForm);
+      const name = formData.get('programName').trim();
+      const code = formData.get('programCode').trim();
+      const level = formData.get('programLevel');
+      const area = formData.get('programArea').trim();
+      const duration = formData.get('programDuration').trim();
+      const mode = formData.get('programMode');
+      const levelClass = level === 'Técnico' ? 'tech' : 'tecno';
+
+      const row = document.createElement('tr');
+      row.innerHTML = `
+        <td>
+          <p class="program-name"></p>
+          <div class="program-sub">${level} en formación profesional</div>
+        </td>
+        <td><span class="code-badge"></span></td>
+        <td><span class="level-chip ${levelClass}"></span></td>
+        <td></td>
+        <td><span class="duration-badge"></span></td>
+        <td></td>
+        <td>
+          <div class="row-actions">
+            <button class="icon-btn edit" aria-label="Editar programa" type="button">✎</button>
+            <button class="icon-btn delete" aria-label="Eliminar programa" type="button">×</button>
+          </div>
+        </td>
+      `;
+
+      row.querySelector('.program-name').textContent = name;
+      row.querySelector('.code-badge').textContent = code;
+      row.querySelector('.level-chip').textContent = level;
+      row.querySelector('td:nth-child(4)').textContent = area;
+      row.querySelector('.duration-badge').textContent = duration;
+      row.querySelector('td:nth-child(6)').textContent = mode;
+      programTableBody.prepend(row);
+      populateProgramFilter();
+
+      closeProgramModal();
+      filterPrograms();
+      refreshInsights();
+      recordActivity('Nuevo programa registrado', 'Ahora', '+');
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = 'Programa agregado correctamente';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2200);
+    });
+
+    const publishButton = document.getElementById('publishEvidence');
+    const fileInput = document.getElementById('fileInput');
+    const evidenceText = document.getElementById('evidenceText');
+    const evidenceGrid = document.getElementById('evidenceGrid');
+    const publishEvidence = () => {
+      const selectedOption = programFilter.options[programFilter.selectedIndex];
+      return selectedOption?.textContent || 'Actividades generales del centro';
+    };
+
+    programFilter.addEventListener('change', () => {
+      publishButton.textContent = programFilter.value === 'general'
+        ? 'Publicar general'
+        : `Publicar en ${publishEvidence()}`;
+    });
+
+    publishButton.addEventListener('click', () => {
+      const file = fileInput.files && fileInput.files[0];
+      const text = evidenceText.value.trim();
+
+      if (!file && !text) {
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = 'Agrega una descripción o un archivo';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 2200);
+        return;
+      }
+
+      const article = document.createElement('article');
+      article.className = 'evidence-card';
+      article.dataset.program = programFilter.value;
+
+      const isImage = file && file.type.startsWith('image/');
+      const preview = isImage
+        ? '<img class="thumb" src="' + URL.createObjectURL(file) + '" alt="Evidencia nueva" />'
+        : '<div class="doc-thumb">DOC</div>';
+
+      article.innerHTML = `
+        <div class="evidence-head">
+          ${preview}
+          <div class="evidence-meta">
+            <p class="evidence-name">${file ? file.name : 'Nueva evidencia.pdf'}</p>
+            <div class="evidence-date">${new Date().toLocaleDateString('es-ES')}</div>
+          </div>
+          <button type="button" class="delete-evidence" aria-label="Eliminar evidencia">
+            <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M2 4h10M5 4V2.5h4V4M11 4l-.8 8H3.8L3 4" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" /></svg>
+          </button>
+        </div>
+        <p class="evidence-description">${text || 'Evidencia publicada desde el panel administrativo.'}</p>
+        <small class="evidence-date">Sección: ${publishEvidence()}</small>
+      `;
+
+      evidenceGrid.prepend(article);
+      evidenceText.value = '';
+      fileInput.value = '';
+      refreshInsights();
+      recordActivity('Evidencia publicada', 'Ahora', '✓');
+
+      const toast = document.createElement('div');
+      toast.className = 'toast';
+      toast.textContent = 'Evidencia publicada';
+      document.body.appendChild(toast);
+      setTimeout(() => toast.remove(), 2200);
+    });
+
+    document.addEventListener('click', (event) => {
+      const deleteButton = event.target.closest('.delete-evidence');
+      if (!deleteButton) return;
+      const card = deleteButton.closest('.evidence-card');
+      if (card) {
+        card.remove();
+        refreshInsights();
+        recordActivity('Evidencia eliminada', 'Ahora', '−');
+      }
+    });
+
+    refreshInsights();
+    populateProgramFilter();
   </script>
 </body>
 </html>
