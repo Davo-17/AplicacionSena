@@ -2,6 +2,17 @@
 
 from app.config.supabase import get_supabase_anon_client
 
+# Alias aceptados como administrador. Supabase y plantillas externas
+# suelen usar "admin"/"administrator"; nuestro panel exige "administrador".
+# Se normaliza aquí para que el resto (RBAC + frontend) compare un solo valor.
+ROLES_ADMIN = {"administrador", "admin", "administrator"}
+
+
+def normalizar_rol(rol: str) -> str:
+    """Devuelve 'administrador' para sus alias; el resto en minúsculas."""
+    limpio = str(rol or "").strip().lower()
+    return "administrador" if limpio in ROLES_ADMIN else limpio
+
 
 class AuthService:
     """Verifica tokens Bearer preguntándole al servidor de Supabase.
@@ -26,9 +37,9 @@ class AuthService:
 
         meta = dict(getattr(usuario, "user_metadata", {}) or {})
         app_meta = dict(getattr(usuario, "app_metadata", {}) or {})
-        rol = str(
+        rol = normalizar_rol(
             meta.get("rol", meta.get("role", app_meta.get("role", "instructor")))
-        ).lower()
+        )
         return {
             "sub": str(usuario.id),
             "email": usuario.email or "",

@@ -5,10 +5,16 @@ Prohíbe explícitamente el wildcard '*' en ALLOWED_ORIGINS.
 """
 
 from functools import lru_cache
+from pathlib import Path
 from typing import Annotated
 
 from pydantic import BeforeValidator, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
+
+# El .env vive junto a este paquete (backend/.env), anclado al archivo
+# y no al directorio de trabajo: así carga igual arranques desde
+# backend/, desde la raíz del repo o desde cualquier otra carpeta.
+_ENV_FILE = Path(__file__).resolve().parent.parent.parent / ".env"
 
 
 def _separar_origenes(valor: object) -> list[str]:
@@ -23,7 +29,7 @@ def _separar_origenes(valor: object) -> list[str]:
 class Settings(BaseSettings):
     """Ajustes globales cargados desde entorno/.env."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=_ENV_FILE, extra="ignore")
 
     app_name: str = "Dajesa-API"
     app_env: str = "dev"

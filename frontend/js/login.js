@@ -111,6 +111,29 @@ function ocultarAvisoBetowa() {
 }
 
 
+const errorTexto =
+    errorMessage.querySelector("p");
+
+const ERROR_DEFECTO =
+    "Correo o contraseña incorrectos.";
+
+
+function mostrarAvisoLimite() {
+
+    if (errorTexto) {
+
+        errorTexto.textContent =
+            "Demasiados intentos. Espera 1 minuto e intenta una sola vez.";
+
+    }
+
+    errorMessage.classList.add("show");
+
+    ocultarAvisoBetowa();
+
+}
+
+
 usernameInput.addEventListener("input", () => {
     clearError();
     ocultarAvisoBetowa();
@@ -122,6 +145,8 @@ passwordInput.addEventListener("input", clearError);
 function clearError() {
 
     errorMessage.classList.remove("show");
+
+    if (errorTexto) errorTexto.textContent = ERROR_DEFECTO;
 
 }
 
@@ -197,6 +222,12 @@ loginForm.addEventListener("submit", function(event) {
             throw new Error("dominio no permitido");
         }
 
+        // 429 = demasiados intentos (límite 5/min por IP). Hay que esperar.
+        if (res.status === 429) {
+            mostrarAvisoLimite();
+            throw new Error("límite de intentos");
+        }
+
         if (!res.ok) {
             throw new Error("credenciales inválidas");
         }
@@ -260,7 +291,7 @@ function loginCorrecto() {
             yo &&
             yo.rol === "administrador"
         ) {
-            window.location.href = "admin.html";
+            window.location.href = "/admin/";
         } else {
             window.location.href = "index.html";
         }
@@ -830,3 +861,4 @@ animateParticles();
     });
 
 })();
+

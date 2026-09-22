@@ -2,7 +2,7 @@
 
 Ejemplo: "Curso de Liderazgo" con 40 cupos.
 - GET /postulaciones -> público (para mostrar la oferta).
-- POST /postulaciones -> solo administrador (desde el panel admin).
+- POST /postulaciones, PUT /postulaciones/{id}, DELETE /postulaciones/{id} -> solo admin.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -54,3 +54,36 @@ def crear_postulacion(
             status_code=500,
             detail="No se pudo guardar. Crea la tabla 'postulaciones' en Supabase (ver tablas_supabase.sql).",
         ) from exc
+
+
+@router.put("/{postulacion_id}")
+def editar_postulacion(
+    postulacion_id: int, datos: PostulacionIn, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Edita una postulación. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        resp = (
+            cliente.table("postulaciones").update(datos.model_dump()).eq("id", postulacion_id).execute()
+        )
+        filas = list(resp.data or [])
+        if not filas:
+            raise HTTPException(status_code=404, detail="Postulación no encontrada.")
+        return filas[0]
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo actualizar.") from exc
+
+
+@router.delete("/{postulacion_id}", status_code=200)
+def borrar_postulacion(
+    postulacion_id: int, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Borra una postulación. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        cliente.table("postulaciones").delete().eq("id", postulacion_id).execute()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo borrar.") from exc
+    return {"ok": True, "id": postulacion_id}

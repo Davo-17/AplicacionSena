@@ -14,23 +14,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ---------- 1. LOGIN ----------
   const btnRegister = document.getElementById("btnRegister");
-  const userProfile = document.getElementById("userProfile");
+  const userMenu = document.getElementById("userMenu");
+  const avatarBtn = document.getElementById("avatarBtn");
+  const userDropdown = document.getElementById("userDropdown");
   const userName = document.getElementById("userName");
+  const userRole = document.getElementById("userRole");
+  const btnPanel = document.getElementById("btnPanel");
+  const btnLogout = document.getElementById("btnLogout");
 
+  // Con sesión: se muestra solo la foto; el menú se despliega al presionarla.
   function mostrarUsuario(nombre, rol) {
-    btnRegister.textContent = "Cerrar sesión";
-    btnRegister.onclick = cerrarSesion;
+    btnRegister.classList.add("hidden");
+    userMenu.classList.remove("hidden");
     userName.textContent = nombre || "Usuario";
-    userProfile.classList.remove("hidden");
+    userRole.textContent = rol || "";
     // Solo el admin ve el acceso al panel. Los demás ni se enteran.
-    if (rol === "administrador" && !document.getElementById("btnPanel")) {
-      const link = document.createElement("a");
-      link.id = "btnPanel";
-      link.href = "admin.html";
-      link.className = "button button-outline-sm";
-      link.textContent = "Panel";
-      btnRegister.before(link);
-    }
+    btnPanel.classList.toggle("hidden", rol !== "administrador");
   }
 
   // Sin sesión: mandamos a la página de login (frontend/login.html),
@@ -43,16 +42,42 @@ document.addEventListener("DOMContentLoaded", () => {
   function mostrarBotonRegistro() {
     btnRegister.textContent = "Ingresar";
     btnRegister.onclick = handleLogin;
-    userProfile.classList.add("hidden");
+    btnRegister.classList.remove("hidden");
+    userMenu.classList.add("hidden");
+    userDropdown.classList.add("hidden");
+    avatarBtn.setAttribute("aria-expanded", "false");
   }
 
   function cerrarSesion() {
     localStorage.removeItem("access_token");
-    document.getElementById("btnPanel")?.remove();
     mostrarBotonRegistro();
   }
 
+  // Despliegue del menú: clic en la foto, Escape o clic fuera lo cierra.
+  function menuUsuarioAbierto() {
+    return !userDropdown.classList.contains("hidden");
+  }
+
+  function setMenuUsuario(abierto) {
+    userDropdown.classList.toggle("hidden", !abierto);
+    avatarBtn.setAttribute("aria-expanded", String(abierto));
+  }
+
   btnRegister.onclick = handleLogin;
+  btnLogout.addEventListener("click", cerrarSesion);
+  avatarBtn.addEventListener("click", (e) => {
+    e.stopPropagation();
+    setMenuUsuario(!menuUsuarioAbierto());
+  });
+  document.addEventListener("click", (e) => {
+    if (menuUsuarioAbierto() && !userMenu.contains(e.target)) setMenuUsuario(false);
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && menuUsuarioAbierto()) {
+      setMenuUsuario(false);
+      avatarBtn.focus();
+    }
+  });
 
   // Si ya había sesión, la recuperamos.
   const tokenGuardado = localStorage.getItem("access_token");
@@ -140,6 +165,35 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   cargarNovedades();
+
+  // ---------- 2c. EVIDENCIAS PÚBLICAS (las publica el admin, visible=true) ----------
+  function escHtml(texto) {
+    return String(texto ?? "").replace(/[&<>"']/g, (c) => ({
+      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;",
+    }[c]));
+  }
+
+  async function cargarEvidenciasPublicas() {
+    const grid = document.getElementById("evidenceGrid");
+    if (!grid) return;
+    try {
+      // Sin token: el backend solo devuelve visible=true (lo público).
+      const items = await pedir(API_URL + "/evidencias");
+      if (!items.length) return; // sin datos: se queda el aviso fijo del HTML
+      grid.innerHTML = items.slice(0, 6).map((e) => {
+        const img = (e.imagenes && e.imagenes[0])
+          ? `<div class="news-image"><img src="${escHtml(e.imagenes[0])}" alt="${escHtml(e.titulo || "Evidencia")}" loading="lazy"><span class="news-tag">${escHtml(e.tipo || "Actividad")}</span></div>`
+          : "";
+        return `<article class="news-card">${img}
+          <div class="news-content"><span class="news-date">Ficha ${escHtml(e.ficha_numero || "")} · ${escHtml(e.fecha || "")}</span><h3>${escHtml(e.titulo || "Actividad SENA")}</h3><p>${escHtml(e.descripcion || "")}</p></div>
+        </article>`;
+      }).join("");
+    } catch (err) {
+      console.warn("Evidencias offline, muestro aviso fijo.", err);
+    }
+  }
+
+  cargarEvidenciasPublicas();
 
   // Acordeón de categorías.
   document.querySelectorAll(".category-header").forEach((btn) => {

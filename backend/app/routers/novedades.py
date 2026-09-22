@@ -1,7 +1,7 @@
 """Rutas de novedades: lo que se ve en "Novedades de la Semana".
 
 - GET /novedades -> público (para el index).
-- POST /novedades -> solo administrador (desde el panel admin).
+- POST /novedades, PUT /novedades/{id}, DELETE /novedades/{id} -> solo admin.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -53,3 +53,34 @@ def crear_novedad(
             status_code=500,
             detail="No se pudo guardar. Crea la tabla 'novedades' en Supabase (ver tablas_supabase.sql).",
         ) from exc
+
+
+@router.put("/{novedad_id}")
+def editar_novedad(
+    novedad_id: int, datos: NovedadIn, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Edita una novedad. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        resp = cliente.table("novedades").update(datos.model_dump()).eq("id", novedad_id).execute()
+        filas = list(resp.data or [])
+        if not filas:
+            raise HTTPException(status_code=404, detail="Novedad no encontrada.")
+        return filas[0]
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo actualizar.") from exc
+
+
+@router.delete("/{novedad_id}", status_code=200)
+def borrar_novedad(
+    novedad_id: int, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Borra una novedad. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        cliente.table("novedades").delete().eq("id", novedad_id).execute()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo borrar.") from exc
+    return {"ok": True, "id": novedad_id}

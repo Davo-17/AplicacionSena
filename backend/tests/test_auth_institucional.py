@@ -68,3 +68,53 @@ def test_token_institucional_pasa_el_candado(monkeypatch: pytest.MonkeyPatch) ->
         HTTPAuthorizationCredentials(scheme="Bearer", credentials="falso")
     )
     assert usuario.email == "profe@sena.edu.co"
+
+
+def test_registro_rechaza_externo_422_sin_tocar_supabase() -> None:
+    """El 422 sale del validador, antes de llamar a Supabase."""
+    resp = TestClient(crear_app()).post(
+        "/api/v1/auth/registro",
+        json={"email": "alguien@gmail.com", "password": "clave12345"},
+    )
+    assert resp.status_code == 422
+    assert "betowa" in resp.text.lower()
+
+
+def test_registro_clave_corta_422() -> None:
+    """La clave mínima (8) se valida antes de llamar a Supabase."""
+    resp = TestClient(crear_app()).post(
+        "/api/v1/auth/registro",
+        json={"email": "nuevo@soy.sena.edu.co", "password": "corta"},
+    )
+    assert resp.status_code == 422
+
+
+def test_registro_fuerza_rol_aprendiz(monkeypatch: pytest.MonkeyPatch) -> None:
+    """El rol sale fijo del servidor: el cliente no puede pedirse admin."""
+    from types import SimpleNamespace
+
+    capturado: dict = {}
+
+    class _FakeAuth:
+        def sign_up(self, credenciales: dict) -> SimpleNamespace:
+            capturado.update(credenciales)
+            return SimpleNamespace(
+                user=SimpleNamespace(id="u1", email=credenciales["email"]),
+                session=None,
+            )
+
+    class _FakeClient:
+        auth = _FakeAuth()
+
+    import app.routers.auth as auth_router
+
+    monkeypatch.setattr(
+        auth_router, "get_supabase_anon_client", lambda: _FakeClient()
+    )
+    resp = TestClient(crear_app()).post(
+        "/api/v1/auth/registro",
+        json={"email": "nuevo@soy.sena.edu.co", "password": "clave12345"},
+    )
+    assert resp.status_code == 201
+    assert capturado["options"]["data"]["rol"] == "aprendiz"
+    assert resp.json() == {"ok": True, "requiere_confirmacion": True}

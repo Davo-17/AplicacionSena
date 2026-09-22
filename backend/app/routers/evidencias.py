@@ -111,8 +111,40 @@ def subir_imagen(
         )
         url = supabase.storage.from_(BUCKET).get_public_url(ruta)
     except Exception as exc:
-        raise HTTPException(status_code=500, detail="No se pudo subir la imagen.") from exc
+        raise HTTPException(
+            status_code=500,
+            detail="No se pudo subir la imagen. Revisa el bucket 'evidencias' y las policies de Storage (ver backend/tablas_supabase.sql).",
+        ) from exc
     return {"url": url, "ruta": ruta}
+
+
+@router.get("/status")
+def estado_storage(_: UsuarioActual = Depends(requerir_administrador)) -> dict:
+    """Diagnóstico para el panel: ¿existe el bucket y deja subir/borrar?
+
+    Nunca lanza: devuelve el problema en texto para mostrarlo en la bitácora.
+    """
+    try:
+        get_supabase_client().storage.get_bucket(BUCKET)
+    except Exception as exc:
+        return {
+            "bucket": False,
+            "puede_subir": False,
+            "detalle": "Falta crear el bucket 'evidencias' en Supabase (Storage). Ejecuta backend/tablas_supabase.sql en el SQL Editor.",
+        }
+    try:
+        supabase = get_supabase_client()
+        supabase.storage.from_(BUCKET).upload(
+            path=".ping", file=b"ping", file_options={"content-type": "text/plain"}
+        )
+        supabase.storage.from_(BUCKET).remove([".ping"])
+        return {"bucket": True, "puede_subir": True, "detalle": "Storage listo."}
+    except Exception:
+        return {
+            "bucket": True,
+            "puede_subir": False,
+            "detalle": "El bucket existe pero faltan las policies de subida/borrado. Ejecuta backend/tablas_supabase.sql en el SQL Editor.",
+        }
 
 
 @router.post("", status_code=201)

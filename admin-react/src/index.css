@@ -1,0 +1,139 @@
+@import "tailwindcss";
+
+/* ===== Tokens estrictos del diseño (dark por defecto) ===== */
+:root {
+  --bg: #0a0f0d;
+  --bg2: #07150d;
+  --panel: #111a17;
+  --panel2: #1a2e22;
+  --neon: #a3e635;
+  --neon-dim: rgba(163, 230, 53, 0.12);
+  --text: #ffffff;
+  --muted: #9ca3af;
+  --border: #1f2937;
+  --danger: #ff4d5e;
+  --blue: #36a9ff;
+  --purple: #9d70ff;
+  --input-bg: #1a2e22;
+  --hover-row: rgba(163, 230, 53, 0.035);
+  --cardhi: rgba(9, 34, 18, 0.92);
+  --cardhi2: rgba(5, 21, 12, 0.94);
+}
+
+/* ===== Tema claro (toggle sol/luna) ===== */
+:root.light {
+  --bg: #f3f5ef;
+  --bg2: #eef2e8;
+  --panel: #ffffff;
+  --panel2: #e8f7de;
+  --neon: #4d9e0b;
+  --neon-dim: rgba(77, 158, 11, 0.1);
+  --text: #17230f;
+  --muted: #67725e;
+  --border: #e4e9dc;
+  --input-bg: #fff;
+  --hover-row: rgba(57, 169, 0, 0.05);
+  --cardhi: #ffffff;
+  --cardhi2: #ffffff;
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-bg2: var(--bg2);
+  --color-panel: var(--panel);
+  --color-panel2: var(--panel2);
+  --color-neon: var(--neon);
+  --color-neondim: var(--neon-dim);
+  --color-ink: var(--text);
+  --color-muted: var(--muted);
+  --color-line: var(--border);
+  --color-danger: var(--danger);
+  --color-inputbg: var(--input-bg);
+  --font-sans: Inter, system-ui, sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, system-ui, sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 75% 5%, rgba(163, 230, 53, 0.06), transparent 25%),
+    radial-gradient(circle at 10% 90%, rgba(25, 150, 65, 0.07), transparent 30%),
+    var(--bg);
+  -webkit-font-smoothing: antialiased;
+  font-size: 14px;
+}
+
+:root.light body {
+  background: var(--bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+button {
+  cursor: pointer;
+}
+
+:focus-visible {
+  outline: 2px solid var(--neon);
+  outline-offset: 2px;
+}
+
+/* Scrollbar delgada */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #22c55e transparent;
+}
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+*::-webkit-scrollbar-thumb {
+  background: #22c55e;
+  border-radius: 4px;
+}
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.55);
+  }
+  50% {
+    box-shadow: 0 0 0 6px rgba(163, 230, 53, 0);
+  }
+}
+
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.anim-enter {
+  animation: fade-up 0.45s cubic-bezier(0.215, 0.61, 0.355, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
+}

@@ -1,7 +1,7 @@
 """Rutas de fichas: grupos organizados por número y programa.
 
 - GET /fichas -> público.
-- POST /fichas -> solo administrador (desde el panel admin).
+- POST /fichas, PUT /fichas/{id}, DELETE /fichas/{id} -> solo admin.
 """
 
 from fastapi import APIRouter, Depends, HTTPException
@@ -52,3 +52,34 @@ def crear_ficha(
             status_code=500,
             detail="No se pudo guardar. Crea la tabla 'fichas' en Supabase (ver tablas_supabase.sql).",
         ) from exc
+
+
+@router.put("/{ficha_id}")
+def editar_ficha(
+    ficha_id: int, datos: FichaIn, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Edita una ficha. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        resp = cliente.table("fichas").update(datos.model_dump()).eq("id", ficha_id).execute()
+        filas = list(resp.data or [])
+        if not filas:
+            raise HTTPException(status_code=404, detail="Ficha no encontrada.")
+        return filas[0]
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo actualizar.") from exc
+
+
+@router.delete("/{ficha_id}", status_code=200)
+def borrar_ficha(
+    ficha_id: int, _: UsuarioActual = Depends(requerir_administrador)
+) -> dict:
+    """Borra una ficha. Solo administradores."""
+    try:
+        cliente = get_supabase_anon_client()
+        cliente.table("fichas").delete().eq("id", ficha_id).execute()
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail="No se pudo borrar.") from exc
+    return {"ok": True, "id": ficha_id}

@@ -41,6 +41,15 @@ document.addEventListener("DOMContentLoaded", () => {
         return;
       }
       document.getElementById("adminName").textContent = yo.email || "Admin";
+      const rolEtiqueta = document.getElementById("adminRole");
+      if (rolEtiqueta && yo.rol) {
+        rolEtiqueta.textContent =
+          yo.rol.charAt(0).toUpperCase() + yo.rol.slice(1);
+      }
+      const avatarInicial = document.getElementById("adminAvatar");
+      if (avatarInicial) {
+        avatarInicial.textContent = (yo.email || "A").trim().charAt(0).toUpperCase();
+      }
       cargarTodo();
     })
     .catch(() => { /* pedir() ya redirige al login */ });
@@ -50,74 +59,295 @@ document.addEventListener("DOMContentLoaded", () => {
     window.location.href = "index.html";
   });
 
-  // ---------- Listas ----------
-  function pintarLista(id, items, texto) {
-    document.getElementById(id).innerHTML = items.map(texto).join("");
+  // ---------- Listas con editar y borrar ----------
+  // Cache de lo cargado (para rellenar el formulario al editar sin otro GET).
+  const datos = { novedades: [], fichas: [], postulaciones: [] };
+  // Id en edición por sección, o null si se está creando.
+  const editando = { novedad: null, ficha: null, postulacion: null };
+
+  function botonesMini(id, prefijo) {
+    if (id == null) return "";
+    return `<div class="item-actions">`
+      + `<button class="mini-btn edit" type="button" data-editar-${prefijo}="${id}" title="Editar" aria-label="Editar">✎</button>`
+      + `<button class="mini-btn del" type="button" data-borrar-${prefijo}="${id}" title="Eliminar" aria-label="Eliminar">×</button>`
+      + `</div>`;
+  }
+
+  function tarjetaNovedad(n) {
+    const etiqueta = (n.etiqueta || "Noticia").trim() || "Noticia";
+    const fecha = (n.fecha || "").trim();
+    return `<li class="item-card item-nov">`
+      + `<div class="item-top"><strong>${esc(n.titulo)}</strong><span class="tag tag-nov">${esc(etiqueta)}</span></div>`
+      + (n.descripcion ? `<p class="item-desc">${esc(n.descripcion)}</p>` : "")
+      + `<div class="item-foot"><small class="item-meta">${esc(fecha) || "Sin fecha"}</small>${botonesMini(n.id, "nov")}</div>`
+      + `</li>`;
+  }
+
+  function filaFicha(f) {
+    return `<tr><td><span class="cell-code">${esc(f.numero)}</span></td>`
+      + `<td>${esc(f.programa)}</td>`
+      + `<td><span class="tag tag-jornada">${esc(f.jornada)}</span></td>`
+      + `<td>${botonesMini(f.id, "fic")}</td></tr>`;
+  }
+
+  function tarjetaPostulacion(p) {
+    const cupos = Number(p.cupos) || 0;
+    const cierre = (p.fecha_cierre || "").trim();
+    return `<li class="item-card item-pos">`
+      + `<div class="item-top"><strong>${esc(p.titulo)}</strong><span class="tag tag-cupos">${cupos} ${cupos === 1 ? "cupo" : "cupos"}</span></div>`
+      + (p.descripcion ? `<p class="item-desc">${esc(p.descripcion)}</p>` : "")
+      + `<div class="item-foot"><small class="item-meta">${cierre ? "Cierra " + esc(cierre) : "Sin fecha de cierre"}</small>${botonesMini(p.id, "pos")}</div>`
+      + `</li>`;
+  }
+
+  const VACIO = {
+    nov: `<li class="empty-note empty-nov">Aún no hay novedades. Publica la primera con el formulario de arriba.</li>`,
+    pos: `<li class="empty-note empty-pos">No hay postulaciones abiertas. Abre la primera con el formulario de arriba.</li>`,
+    fic: `<tr><td colspan="4" class="cell-empty">Aún no hay fichas registradas. Crea la primera con el formulario.</td></tr>`,
+  };
+
+  function enlazarAcciones(cont, prefijo, alEditar, alBorrar) {
+    const clave = "editar" + prefijo[0].toUpperCase() + prefijo.slice(1);
+    const claveBorrar = "borrar" + prefijo[0].toUpperCase() + prefijo.slice(1);
+    cont.querySelectorAll(`[data-editar-${prefijo}]`).forEach((b) =>
+      b.addEventListener("click", () => alEditar(b.dataset[clave])));
+    cont.querySelectorAll(`[data-borrar-${prefijo}]`).forEach((b) =>
+      b.addEventListener("click", () => alBorrar(b.dataset[claveBorrar])));
   }
 
   async function cargarTodo() {
     try {
-      const novedades = await pedir(API_URL + "/novedades");
-      pintarLista("listaNovedades", novedades, (n) =>
-        `<li><strong>${n.titulo}</strong> <small>· ${n.etiqueta || ""} · ${n.fecha || ""}</small><br>${n.descripcion || ""}</li>`
-      );
+      datos.novedades = await pedir(API_URL + "/novedades");
+      const listaNov = document.getElementById("listaNovedades");
+      listaNov.innerHTML = datos.novedades.length
+        ? datos.novedades.map(tarjetaNovedad).join("")
+        : VACIO.nov;
+      enlazarAcciones(listaNov, "nov", entrarEdicionNovedad, borrarNovedad);
     } catch (e) { console.warn(e); }
 
     try {
-      const fichas = await pedir(API_URL + "/fichas");
-      document.getElementById("listaFichas").innerHTML = fichas
-        .map((f) => `<tr><td>${f.numero}</td><td>${f.programa}</td><td>${f.jornada}</td></tr>`)
-        .join("");
+      datos.fichas = await pedir(API_URL + "/fichas");
+      const cuerpoFic = document.getElementById("listaFichas");
+      cuerpoFic.innerHTML = datos.fichas.length
+        ? datos.fichas.map(filaFicha).join("")
+        : VACIO.fic;
+      enlazarAcciones(cuerpoFic, "fic", entrarEdicionFicha, borrarFicha);
     } catch (e) { console.warn(e); }
 
     try {
-      const postulaciones = await pedir(API_URL + "/postulaciones");
-      pintarLista("listaPostulaciones", postulaciones, (p) =>
-        `<li><strong>${p.titulo}</strong> <small>· ${p.cupos} cupos · cierra ${p.fecha_cierre || "—"}</small><br>${p.descripcion || ""}</li>`
-      );
+      datos.postulaciones = await pedir(API_URL + "/postulaciones");
+      const listaPos = document.getElementById("listaPostulaciones");
+      listaPos.innerHTML = datos.postulaciones.length
+        ? datos.postulaciones.map(tarjetaPostulacion).join("")
+        : VACIO.pos;
+      enlazarAcciones(listaPos, "pos", entrarEdicionPostulacion, borrarPostulacion);
     } catch (e) { console.warn(e); }
 
     cargarSelectorFichas();
   }
 
-  // ---------- Formularios ----------
-  function conectarForm(formId, url, campos, msgId) {
-    document.getElementById(formId).addEventListener("submit", async (e) => {
-      e.preventDefault();
-      const msg = document.getElementById(msgId);
-      const datos = {};
-      campos.forEach(([id, clave, numero]) => {
-        const valor = document.getElementById(id).value.trim();
-        datos[clave] = numero ? Number(valor) : valor;
-      });
-      try {
-        await pedir(url, { method: "POST", headers: authHeaders, body: JSON.stringify(datos) });
-        msg.textContent = "✓ Guardado.";
-        e.target.reset();
-        cargarTodo();
-      } catch (err) {
-        msg.textContent = "✕ " + err.message;
-      }
+  // ---------- Formularios: crear y editar ----------
+  function leerCampos(campos) {
+    const datos = {};
+    campos.forEach(([id, clave, numero]) => {
+      const valor = document.getElementById(id).value.trim();
+      datos[clave] = numero ? Number(valor) : valor;
     });
+    return datos;
   }
 
-  conectarForm("formNovedad", API_URL + "/novedades",
-    [["novTitulo", "titulo"], ["novEtiqueta", "etiqueta"], ["novFecha", "fecha"], ["novDesc", "descripcion"]],
-    "msgNovedad");
+  // Novedades
+  function entrarEdicionNovedad(id) {
+    const n = datos.novedades.find((x) => String(x.id) === String(id));
+    if (!n) return;
+    editando.novedad = n.id;
+    document.getElementById("novTitulo").value = n.titulo || "";
+    document.getElementById("novEtiqueta").value = n.etiqueta || "";
+    document.getElementById("novFecha").value = n.fecha || "";
+    document.getElementById("novDesc").value = n.descripcion || "";
+    document.getElementById("novSubmit").textContent = "Guardar cambios";
+    document.getElementById("novCancelar").classList.remove("hidden");
+    document.getElementById("sec-novedades").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
 
-  conectarForm("formFicha", API_URL + "/fichas",
-    [["ficNumero", "numero"], ["ficPrograma", "programa"], ["ficJornada", "jornada"]],
-    "msgFicha");
+  function salirEdicionNovedad() {
+    editando.novedad = null;
+    document.getElementById("formNovedad").reset();
+    document.getElementById("novSubmit").textContent = "Publicar novedad";
+    document.getElementById("novCancelar").classList.add("hidden");
+    document.getElementById("msgNovedad").textContent = "";
+  }
 
-  conectarForm("formPostulacion", API_URL + "/postulaciones",
-    [["posTitulo", "titulo"], ["posDesc", "descripcion"], ["posCupos", "cupos", true], ["posCierre", "fecha_cierre"]],
-    "msgPostulacion");
+  document.getElementById("formNovedad").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("msgNovedad");
+    const cuerpo = leerCampos(
+      [["novTitulo", "titulo"], ["novEtiqueta", "etiqueta"], ["novFecha", "fecha"], ["novDesc", "descripcion"]]);
+    msg.textContent = "Guardando…";
+    try {
+      if (editando.novedad) {
+        await pedir(API_URL + "/novedades/" + editando.novedad,
+          { method: "PUT", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      } else {
+        await pedir(API_URL + "/novedades",
+          { method: "POST", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      }
+      const eraEdicion = editando.novedad;
+      salirEdicionNovedad();
+      msg.textContent = eraEdicion ? "✓ Novedad actualizada." : "✓ Novedad publicada.";
+      cargarTodo();
+    } catch (err) {
+      msg.textContent = "✕ " + err.message;
+    }
+  });
+  document.getElementById("novCancelar").addEventListener("click", salirEdicionNovedad);
+
+  async function borrarNovedad(id) {
+    const n = datos.novedades.find((x) => String(x.id) === String(id));
+    if (!confirm(`¿Eliminar la novedad "${(n && n.titulo) || ""}"?`)) return;
+    const msg = document.getElementById("msgNovedad");
+    try {
+      await pedir(API_URL + "/novedades/" + id, { method: "DELETE", headers: authHeaders });
+      if (String(editando.novedad) === String(id)) salirEdicionNovedad();
+      msg.textContent = "✓ Novedad eliminada.";
+      cargarTodo();
+    } catch (err) { msg.textContent = "✕ " + err.message; }
+  }
+
+  // Fichas
+  function entrarEdicionFicha(id) {
+    const f = datos.fichas.find((x) => String(x.id) === String(id));
+    if (!f) return;
+    editando.ficha = f.id;
+    document.getElementById("ficNumero").value = f.numero || "";
+    document.getElementById("ficPrograma").value = f.programa || "";
+    document.getElementById("ficJornada").value = f.jornada || "";
+    document.getElementById("ficSubmit").textContent = "Guardar cambios";
+    document.getElementById("ficCancelar").classList.remove("hidden");
+    document.getElementById("sec-fichas").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function salirEdicionFicha() {
+    editando.ficha = null;
+    document.getElementById("formFicha").reset();
+    document.getElementById("ficSubmit").textContent = "Guardar ficha";
+    document.getElementById("ficCancelar").classList.add("hidden");
+    document.getElementById("msgFicha").textContent = "";
+  }
+
+  document.getElementById("formFicha").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("msgFicha");
+    const cuerpo = leerCampos(
+      [["ficNumero", "numero"], ["ficPrograma", "programa"], ["ficJornada", "jornada"]]);
+    msg.textContent = "Guardando…";
+    try {
+      if (editando.ficha) {
+        await pedir(API_URL + "/fichas/" + editando.ficha,
+          { method: "PUT", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      } else {
+        await pedir(API_URL + "/fichas",
+          { method: "POST", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      }
+      const eraEdicion = editando.ficha;
+      salirEdicionFicha();
+      msg.textContent = eraEdicion ? "✓ Ficha actualizada." : "✓ Ficha guardada.";
+      cargarTodo();
+    } catch (err) {
+      msg.textContent = "✕ " + err.message;
+    }
+  });
+  document.getElementById("ficCancelar").addEventListener("click", salirEdicionFicha);
+
+  async function borrarFicha(id) {
+    const f = datos.fichas.find((x) => String(x.id) === String(id));
+    if (!confirm(`¿Eliminar la ficha ${(f && f.numero) || ""}? Su bitácora quedará sin ficha asociada.`)) return;
+    const msg = document.getElementById("msgFicha");
+    try {
+      await pedir(API_URL + "/fichas/" + id, { method: "DELETE", headers: authHeaders });
+      if (String(editando.ficha) === String(id)) salirEdicionFicha();
+      msg.textContent = "✓ Ficha eliminada.";
+      cargarTodo();
+    } catch (err) { msg.textContent = "✕ " + err.message; }
+  }
+
+  // Postulaciones
+  function entrarEdicionPostulacion(id) {
+    const p = datos.postulaciones.find((x) => String(x.id) === String(id));
+    if (!p) return;
+    editando.postulacion = p.id;
+    document.getElementById("posTitulo").value = p.titulo || "";
+    document.getElementById("posDesc").value = p.descripcion || "";
+    document.getElementById("posCupos").value = p.cupos ?? "";
+    document.getElementById("posCierre").value = p.fecha_cierre || "";
+    document.getElementById("posSubmit").textContent = "Guardar cambios";
+    document.getElementById("posCancelar").classList.remove("hidden");
+    document.getElementById("sec-postulaciones").scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function salirEdicionPostulacion() {
+    editando.postulacion = null;
+    document.getElementById("formPostulacion").reset();
+    document.getElementById("posSubmit").textContent = "Abrir postulación";
+    document.getElementById("posCancelar").classList.add("hidden");
+    document.getElementById("msgPostulacion").textContent = "";
+  }
+
+  document.getElementById("formPostulacion").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const msg = document.getElementById("msgPostulacion");
+    const cuerpo = leerCampos(
+      [["posTitulo", "titulo"], ["posDesc", "descripcion"], ["posCupos", "cupos", true], ["posCierre", "fecha_cierre"]]);
+    msg.textContent = "Guardando…";
+    try {
+      if (editando.postulacion) {
+        await pedir(API_URL + "/postulaciones/" + editando.postulacion,
+          { method: "PUT", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      } else {
+        await pedir(API_URL + "/postulaciones",
+          { method: "POST", headers: authHeaders, body: JSON.stringify(cuerpo) });
+      }
+      const eraEdicion = editando.postulacion;
+      salirEdicionPostulacion();
+      msg.textContent = eraEdicion ? "✓ Postulación actualizada." : "✓ Postulación abierta.";
+      cargarTodo();
+    } catch (err) {
+      msg.textContent = "✕ " + err.message;
+    }
+  });
+  document.getElementById("posCancelar").addEventListener("click", salirEdicionPostulacion);
+
+  async function borrarPostulacion(id) {
+    const p = datos.postulaciones.find((x) => String(x.id) === String(id));
+    if (!confirm(`¿Eliminar la postulación "${(p && p.titulo) || ""}"?`)) return;
+    const msg = document.getElementById("msgPostulacion");
+    try {
+      await pedir(API_URL + "/postulaciones/" + id, { method: "DELETE", headers: authHeaders });
+      if (String(editando.postulacion) === String(id)) salirEdicionPostulacion();
+      msg.textContent = "✓ Postulación eliminada.";
+      cargarTodo();
+    } catch (err) { msg.textContent = "✕ " + err.message; }
+  }
 
   // ---------- Bitácora por ficha ----------
   const selFicha = document.getElementById("eviFicha");
   const inputFotos = document.getElementById("eviFotos");
   const preview = document.getElementById("eviPreview");
   const msgEvi = document.getElementById("msgEvidencia");
+
+  // Diagnóstico de Storage: avisa en el panel si falta el bucket o las policies.
+  (async () => {
+    const aviso = document.getElementById("msgStorage");
+    if (!aviso) return;
+    try {
+      const estado = await pedir(API_URL + "/evidencias/status", { headers: authHeaders });
+      if (!estado.bucket || !estado.puede_subir) {
+        aviso.textContent = "⚠ " + (estado.detalle || "Storage no disponible.");
+      } else {
+        aviso.textContent = "";
+      }
+    } catch (e) { console.warn(e); }
+  })();
 
   inputFotos.addEventListener("change", () => {
     const archivos = Array.from(inputFotos.files || []).slice(0, 4);
@@ -280,12 +510,12 @@ document.addEventListener("DOMContentLoaded", () => {
     });
     document.getElementById("listaProgramas").innerHTML = lista.length ? lista.map((p) => `
       <tr>
-        <td><strong>${esc(nombreProg(p))}</strong><br><small>${esc(p.titulacion || "")}</small></td>
-        <td><small style="font-family:monospace">${esc(p.codigo || "—")}</small></td>
+        <td><p class="cell-name">${esc(nombreProg(p))}</p><p class="cell-sub">${esc(p.titulacion || "")}</p></td>
+        <td><span class="cell-code">${esc(p.codigo || "—")}</span></td>
         <td><span class="nivel-badge ${nivelNorm(p) === "tecnologia" ? "nivel-teg" : "nivel-tec"}">${nivelNorm(p) === "tecnologia" ? "Tecnólogo" : "Técnico"}</span></td>
-        <td><small>${esc(p.area || "—")}</small></td>
-        <td><small>${esc(p.duracion || "—")}</small></td>
-        <td><small>${esc(p.modalidad || "—")}</small></td>
+        <td><p class="cell-area">${esc(p.area || "—")}</p></td>
+        <td><span class="cell-dur">${esc(p.duracion || "—")}</span></td>
+        <td><span class="mod-badge" data-mod="${esc((p.modalidad || "").toLowerCase())}">${esc(p.modalidad || "—")}</span></td>
         <td><div style="display:flex;gap:.25rem">
           <button class="icon-btn edit" data-editar="${p.id}" title="Editar" aria-label="Editar ${esc(nombreProg(p))}">
             <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M10 2l2 2-8 8H2v-2L10 2z" stroke="currentColor" stroke-width="1.4" stroke-linejoin="round"/></svg>
@@ -295,7 +525,7 @@ document.addEventListener("DOMContentLoaded", () => {
           </button>
         </div></td>
       </tr>`).join("")
-      : `<tr><td colspan="7" style="text-align:center;padding:2rem;color:var(--admin-muted)">No se encontraron programas con los filtros actuales</td></tr>`;
+      : `<tr><td colspan="7" class="cell-empty">No se encontraron programas con los filtros actuales</td></tr>`;
     document.getElementById("progCount").textContent =
       `Mostrando ${lista.length} de ${programas.length} programas`;
     document.querySelectorAll("[data-editar]").forEach((b) =>

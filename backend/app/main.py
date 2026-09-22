@@ -12,9 +12,11 @@ Para correr: python -m uvicorn app.main:app --reload --port 8000
 
 from pathlib import Path
 
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
@@ -31,6 +33,15 @@ def crear_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title=settings.app_name)
 
+    # Diagnóstico visible al arrancar: confirma qué Supabase se usará.
+    # Solo se muestra el host, nunca las claves.
+    _log = logging.getLogger("dajesa")
+    _host = settings.supabase_url.replace("https://", "").replace("http://", "").split("/")[0]
+    if "tu-proyecto" in settings.supabase_url or len(settings.supabase_anon_key) < 50:
+        _log.warning("Supabase NO configurado (.env sin valores reales): el login fallará.")
+    else:
+        _log.info("Supabase configurado: %s", _host)
+
     # --- Seguridad ---
     app.state.limiter = limiter
     app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)  # type: ignore[arg-type]
@@ -40,7 +51,7 @@ def crear_app() -> FastAPI:
         CORSMiddleware,
         allow_origins=settings.allowed_origins,
         allow_credentials=False,
-        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
         allow_headers=["Authorization", "Content-Type"],
     )
     registrar_manejadores(app)
@@ -64,6 +75,29 @@ def crear_app() -> FastAPI:
         @app.get("/favicon.ico", include_in_schema=False)
         async def favicon() -> FileResponse:
             return FileResponse(favicon_path, media_type="image/png")
+
+    # --- Panel admin React en /admin (misma URL, sin CORS) ---
+    # Se sirve lo construido con `npm run build` en admin-react/dist.
+    # Es una SPA: /admin y /admin/<ruta> devuelven index.html.
+    admin_dist = Path(__file__).resolve().parent.parent.parent / "admin-react" / "dist"
+    admin_index = admin_dist / "index.html"
+    if admin_dist.exists() and admin_index.exists():
+        assets_dir = admin_dist / "assets"
+        if assets_dir.exists():
+            app.mount("/admin/assets", StaticFiles(directory=assets_dir), name="admin-assets")
+
+        @app.get("/admin", include_in_schema=False)
+        async def admin_root() -> RedirectResponse:
+            # Con barra final: las rutas relativas (logo, favicon) resuelven bien.
+            return RedirectResponse(url="/admin/", status_code=307)
+
+        @app.get("/admin/{ruta:path}", include_in_schema=False)
+        async def admin_spa(ruta: str) -> FileResponse:
+            candidato = admin_dist / ruta
+            # Archivos reales (ej. vite.svg) se sirven tal cual; lo demás es la SPA.
+            if ruta and candidato.is_file():
+                return FileResponse(candidato)
+            return FileResponse(admin_index)
 
     if frontend_dir.exists():
         app.mount("/", StaticFiles(directory=frontend_dir, html=True), name="frontend")

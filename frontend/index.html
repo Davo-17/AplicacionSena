@@ -58,15 +58,24 @@
                     <a href="#programas">Programas</a>
                     <a href="#asistente-ia">Carmencho</a>
                     <a href="#novedades">Novedades</a>
+                    <a href="#evidencias">Evidencias</a>
             </nav>
 
             <div class="nav-actions">
             <div class="nav-user-area" id="navUserArea">
-                
                 <button class="button button-outline-sm" id="btnRegister">Ingresar</button>
-                <div class="user-profile hidden" id="userProfile">
-                  <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Foto de perfil" class="user-avatar">
-                  <span class="user-name" id="userName">Santiago López</span>
+                <div class="user-menu hidden" id="userMenu">
+                  <button class="avatar-btn" id="avatarBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de usuario">
+                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Foto de perfil" class="user-avatar">
+                  </button>
+                  <div class="user-dropdown hidden" id="userDropdown" role="menu">
+                    <div class="user-dropdown-head">
+                      <strong id="userName">Usuario</strong>
+                      <small id="userRole">Rol</small>
+                    </div>
+                    <a href="/admin/" id="btnPanel" class="dropdown-item hidden">Panel admin</a>
+                    <button id="btnLogout" class="dropdown-item" type="button">Cerrar sesión</button>
+                  </div>
                 </div>
             </div>
             </div>
@@ -237,6 +246,22 @@
             </div>
         </section>
 
+        <!-- EVIDENCIAS / ACTIVIDADES DE LA SEMANA (publica el admin) -->
+        <section id="evidencias" class="news-section">
+            <div class="container">
+              <div class="section-title text-center">
+                <span class="section-badge-green">ACTIVIDADES DEL CENTRO</span>
+                <h2>Evidencias de la semana</h2>
+                <p>Lo que el personal administrativo publica en el panel aparece aquí automáticamente.</p>
+              </div>
+              <div class="news-grid" id="evidenceGrid">
+                <article class="news-card">
+                  <div class="news-content"><span class="news-date">SENA · CFDCM</span><h3>Aún no hay evidencias publicadas</h3><p>Cuando el admin publique actividades visibles de las fichas, se mostrarán en esta sección.</p></div>
+                </article>
+              </div>
+            </div>
+        </section>
+
         <!-- HERRAMIENTAS INTELIGENTES -->
         <section id="asistente-ia" class="tools-section">
             <div class="container">
@@ -377,6 +402,7 @@
               <a href="#programas">Programas</a>
               <a href="#asistente-ia">Carmencho</a>
               <a href="#novedades">Novedades</a>
+              <a href="#evidencias">Evidencias</a>
           </div>
           <div class="footer-column">
               <h4>Formación</h4>

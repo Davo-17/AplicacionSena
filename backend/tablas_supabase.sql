@@ -86,6 +86,17 @@ drop policy if exists "lectura publica evidencias" on storage.objects;
 create policy "lectura publica evidencias" on storage.objects
 for select to anon using (bucket_id = 'evidencias');
 
+-- Subida y borrado desde el panel. OBLIGATORIAS: la key del backend es
+-- publishable (no salta RLS como la service_role), sin estas policies
+-- el upload falla con 403 "row-level security policy".
+drop policy if exists "subida evidencias" on storage.objects;
+create policy "subida evidencias" on storage.objects
+for insert to anon, authenticated with check (bucket_id = 'evidencias');
+
+drop policy if exists "borrado evidencias" on storage.objects;
+create policy "borrado evidencias" on storage.objects
+for delete to anon, authenticated using (bucket_id = 'evidencias');
+
 -- Programas (gestión completa desde el panel; compatible con el index).
 create table if not exists programas (
   id bigint generated always as identity primary key,
@@ -112,3 +123,15 @@ drop policy if exists "demo escritura" on programas;
 create policy "demo escritura" on programas for insert to anon with check (true);
 drop policy if exists "demo borrado" on programas;
 create policy "demo borrado" on programas for delete to anon using (true);
+
+-- Actualización (la necesita el botón "Editar" del panel: PUT /programas/{id}).
+drop policy if exists "demo actualizacion" on novedades;
+create policy "demo actualizacion" on novedades for update to anon using (true) with check (true);
+drop policy if exists "demo actualizacion" on fichas;
+create policy "demo actualizacion" on fichas for update to anon using (true) with check (true);
+drop policy if exists "demo actualizacion" on postulaciones;
+create policy "demo actualizacion" on postulaciones for update to anon using (true) with check (true);
+drop policy if exists "demo actualizacion" on evidencias;
+create policy "demo actualizacion" on evidencias for update to anon using (true) with check (true);
+drop policy if exists "demo actualizacion" on programas;
+create policy "demo actualizacion" on programas for update to anon using (true) with check (true);
