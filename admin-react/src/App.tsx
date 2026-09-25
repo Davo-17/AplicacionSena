@@ -1,12 +1,13 @@
+import { Loader2 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { AuthProvider, exigirSesion, useAuth } from "./auth/AuthContext";
 import ArchivosSection from "./components/ArchivosSection";
 import BitacoraSection from "./components/BitacoraSection";
 import Header from "./components/Header";
 import Hero from "./components/Hero";
-import Login from "./components/Login";
 import ProgramsSection from "./components/ProgramsSection";
 import { FichasSection, NovedadesSection, PostulacionesSection } from "./components/ResourceSections";
+import UsuariosSection from "./components/UsuariosSection";
 import Sidebar from "./components/Sidebar";
 import { ToastProvider } from "./components/Toast";
 import { ActivityCard, FollowCard } from "./components/TrackingCards";
@@ -79,7 +80,7 @@ function Panel() {
   // Marca las secciones laterales según el scroll (igual que el panel anterior).
   useEffect(() => {
     if (!user) return;
-    const ids = ["programas", "novedades", "postulaciones", "fichas", "bitacora"];
+    const ids = ["programas", "novedades", "postulaciones", "fichas", "bitacora", "usuarios"];
     const obs = new IntersectionObserver(
       (entries) => {
         for (const e of entries) {
@@ -97,13 +98,37 @@ function Panel() {
 
   if (cargando) {
     return (
-      <div className="grid min-h-screen place-items-center bg-bg text-[13px] text-muted">
-        Verificando sesión…
+      <div className="grid min-h-screen place-items-center bg-bg px-4">
+        <div className="anim-enter flex flex-col items-center gap-4">
+          <div className="grid h-[56px] w-[56px] place-items-center overflow-hidden rounded-2xl border border-neon/40 bg-white p-1">
+            <img src="logo-sena.png" alt="Logo SENA" className="h-full w-full object-contain" />
+          </div>
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+            <Loader2 size={15} className="animate-spin text-neon" />
+            Cargando panel…
+          </div>
+        </div>
       </div>
     );
   }
 
-  if (!user) return <Login />;
+  // Sin sesión no hay login interno: el único acceso es el login principal.
+  if (!user) {
+    window.location.replace("/login.html");
+    return (
+      <div className="grid min-h-screen place-items-center bg-bg px-4">
+        <div className="anim-enter flex flex-col items-center gap-4">
+          <div className="grid h-[56px] w-[56px] place-items-center overflow-hidden rounded-2xl border border-neon/40 bg-white p-1">
+            <img src="logo-sena.png" alt="Logo SENA" className="h-full w-full object-contain" />
+          </div>
+          <div className="flex items-center gap-2 text-[13px] font-semibold text-muted">
+            <Loader2 size={15} className="animate-spin text-neon" />
+            Redirigiendo al ingreso…
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-bg font-sans text-ink">
@@ -168,6 +193,10 @@ function Panel() {
                 onChanged={() => setEvidenciasTick((t) => t + 1)}
               />
               <ArchivosSection ficha={ficha} tick={evidenciasTick} />
+            </div>
+
+            <div id="usuarios" className="grid scroll-mt-[80px] items-start gap-[15px]">
+              <UsuariosSection log={log} />
             </div>
           </div>
         </main>

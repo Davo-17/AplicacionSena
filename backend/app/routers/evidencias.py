@@ -6,6 +6,7 @@
 - DELETE /evidencias/{id} -> solo administrador.
 """
 
+import logging
 import uuid
 from typing import Annotated, Literal
 
@@ -19,6 +20,7 @@ from app.services.auth_service import AuthService
 
 router = APIRouter(prefix="/evidencias", tags=["evidencias"])
 
+logger = logging.getLogger("dajesa")
 BUCKET = "evidencias"
 MAX_BYTES = 5 * 1024 * 1024
 MAX_IMAGENES = 4
@@ -127,6 +129,9 @@ def estado_storage(_: UsuarioActual = Depends(requerir_administrador)) -> dict:
     try:
         get_supabase_client().storage.get_bucket(BUCKET)
     except Exception as exc:
+        # Causa real en terminal (ej. bucket inexistente, key/URL mal,
+        # proyecto equivocado). Al panel va el texto guía, sin secretos.
+        logger.warning("Storage status: no se pudo leer el bucket: %s", exc)
         return {
             "bucket": False,
             "puede_subir": False,
@@ -139,7 +144,8 @@ def estado_storage(_: UsuarioActual = Depends(requerir_administrador)) -> dict:
         )
         supabase.storage.from_(BUCKET).remove([".ping"])
         return {"bucket": True, "puede_subir": True, "detalle": "Storage listo."}
-    except Exception:
+    except Exception as exc:
+        logger.warning("Storage status: el bucket existe pero falla subir/borrar: %s", exc)
         return {
             "bucket": True,
             "puede_subir": False,

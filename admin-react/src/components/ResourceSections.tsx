@@ -1,9 +1,11 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { exigirSesion } from "../auth/AuthContext";
 import { useCollection } from "../hooks/useCollection";
 import { api, type Ficha, type Novedad, type Postulacion } from "../lib/api";
 import { useToast } from "./Toast";
 import ConfirmModal from "./ConfirmModal";
 import CrudSection, { type FormValues, ItemActions } from "./CrudSection";
+import NovedadImagenUploader from "./NovedadImagenUploader";
 
 const ICON_NOV = (
   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M4 5h16v11H8l-4 4V5z" /><path d="M8 9h8M8 12h5" /></svg>
@@ -26,18 +28,47 @@ export function NovedadesSection({ log }: { log: (t: string) => void }) {
   const [msg, setMsg] = useState("");
   const [porBorrar, setPorBorrar] = useState<Novedad | null>(null);
   const [borrando, setBorrando] = useState(false);
+  const [imagenArchivo, setImagenArchivo] = useState<File | null>(null);
+  const [imagenActual, setImagenActual] = useState("");
+  const [avisoStorage, setAvisoStorage] = useState("");
+
+  const imagenPreview = useMemo(
+    () => (imagenArchivo ? URL.createObjectURL(imagenArchivo) : ""),
+    [imagenArchivo],
+  );
+  useEffect(() => () => {
+    if (imagenPreview) URL.revokeObjectURL(imagenPreview);
+  }, [imagenPreview]);
+
+  useEffect(() => {
+    exigirSesion(api.novedades.status())
+      .then((e) => setAvisoStorage(!e.bucket || !e.puede_subir ? `⚠ ${e.detalle}` : ""))
+      .catch(() => {});
+  }, []);
+
+  function limpiarImagen() {
+    setImagenArchivo(null);
+    setImagenActual("");
+  }
 
   async function submit() {
-    setMsg("Guardando…");
+    setMsg(imagenArchivo ? "Subiendo portada…" : "Guardando…");
     try {
       const eraEdicion = col.editingId != null;
+      let imagenUrl = imagenActual;
+      if (imagenArchivo) {
+        const sub = await exigirSesion(api.novedades.subir(imagenArchivo));
+        imagenUrl = sub.url;
+      }
       await col.guardar({
         titulo: (values.titulo || "").trim(),
         descripcion: (values.descripcion || "").trim(),
         fecha: (values.fecha || "").trim(),
         etiqueta: (values.etiqueta || "").trim() || "Noticia",
+        imagen: imagenUrl,
       });
       setValues({});
+      limpiarImagen();
       setMsg(eraEdicion ? "✓ Novedad actualizada." : "✓ Novedad publicada.");
       toast(eraEdicion ? "Novedad actualizada" : "Novedad publicada");
       log(eraEdicion ? "Novedad actualizada" : "Novedad publicada");
@@ -84,8 +115,36 @@ export function NovedadesSection({ log }: { log: (t: string) => void }) {
         submitEdit="Guardar cambios"
         emptyText="Aún no hay novedades. Publica la primera con el formulario de arriba."
         msg={msg}
+        formExtra={
+          <>
+            {avisoStorage && (
+              <p role="status" className="rounded-[10px] border border-neon/30 bg-neon/[0.07] px-3 py-2 text-[12px] font-semibold text-neon">
+                {avisoStorage}
+              </p>
+            )}
+            <NovedadImagenUploader
+              archivo={imagenArchivo}
+              preview={imagenPreview}
+              actual={imagenActual}
+              onElegir={(f) => {
+                setImagenArchivo(f);
+                setMsg("");
+              }}
+              onQuitar={limpiarImagen}
+              onError={(m) => {
+                setMsg(`✕ ${m}`);
+                toast(m);
+              }}
+            />
+          </>
+        }
         renderItem={(n, acc) => (
           <>
+            {n.imagen && (
+              <span className="block aspect-[16/10] w-full overflow-hidden rounded-lg border border-line bg-black/20">
+                <img src={n.imagen} alt={n.titulo} loading="lazy" className="h-full w-full object-cover" />
+              </span>
+            )}
             <div className="flex items-start justify-between gap-2">
               <strong className="text-[14px] text-ink">{n.titulo}</strong>
               <span className="flex-none rounded-full border border-neon/30 bg-neon/10 px-2 py-[3px] text-[11px] font-extrabold text-neon">
@@ -103,11 +162,14 @@ export function NovedadesSection({ log }: { log: (t: string) => void }) {
         onCancel={() => {
           col.setEditingId(null);
           setValues({});
+          limpiarImagen();
           setMsg("");
         }}
         onEdit={(n) => {
           col.setEditingId(n.id);
           setValues({ titulo: n.titulo || "", etiqueta: n.etiqueta || "", fecha: n.fecha || "", descripcion: n.descripcion || "" });
+          setImagenArchivo(null);
+          setImagenActual(n.imagen || "");
           setMsg("");
           desplazarA("sec-novedades");
         }}

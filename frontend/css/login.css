@@ -1521,3 +1521,87 @@ body {
     height: 45px;
     object-fit: contain;
 }
+
+
+/* Anuncio de verificación en 2 pasos */
+.link-button {
+    display: block;
+    width: 100%;
+    margin-top: 12px;
+    border: none;
+    background: none;
+    color: rgba(255, 255, 255, 0.7);
+    font: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+}
+
+.link-button:hover {
+    color: #fff;
+}
+
+.verify-announce {
+    text-align: center;
+    padding: 16px 14px;
+    border-radius: 12px;
+    background: rgba(57, 169, 0, 0.1);
+    border: 1px solid rgba(57, 169, 0, 0.35);
+    animation: fade-up .3s ease both;
+}
+
+.verify-icon {
+    font-size: 28px;
+    margin-bottom: 6px;
+}
+
+.verify-announce h3 {
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.verify-announce p {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 12px;
+    line-height: 1.6;
+}
+
+.verify-announce strong {
+    color: #86efac;
+}
+
+.verify-timer {
+    display: inline-block;
+    margin-top: 10px;
+    padding: 4px 16px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.35);
+    border: 1px solid rgba(57, 169, 0, 0.5);
+    color: #86efac;
+    font-size: 20px;
+    font-weight: 800;
+    font-variant-numeric: tabular-nums;
+    letter-spacing: 2px;
+}
+
+.verify-timer.agotado {
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+/* Código de 6 dígitos */
+.code-input {
+    text-align: center !important;
+    letter-spacing: 10px !important;
+    font-size: 20px !important;
+    font-weight: 800 !important;
+}
+
+/* El atributo hidden manda sobre los display del tema */
+.login-form[hidden],
+.link-button[hidden] {
+    display: none !important;
+}

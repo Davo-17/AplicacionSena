@@ -8,8 +8,11 @@ create table if not exists novedades (
   descripcion text not null,
   fecha text default '',
   etiqueta text default 'Noticia',
+  imagen text default '',
   created_at timestamptz default now()
 );
+-- Si la tabla ya existía sin portada, se agrega sin borrar nada.
+alter table novedades add column if not exists imagen text default '';
 
 create table if not exists fichas (
   id bigint generated always as identity primary key,
@@ -96,6 +99,23 @@ for insert to anon, authenticated with check (bucket_id = 'evidencias');
 drop policy if exists "borrado evidencias" on storage.objects;
 create policy "borrado evidencias" on storage.objects
 for delete to anon, authenticated using (bucket_id = 'evidencias');
+
+-- Bucket de portadas de novedades (una imagen por tarjeta, igual que las fakes).
+insert into storage.buckets (id, name, public)
+values ('novedades', 'novedades', true)
+on conflict (id) do nothing;
+
+drop policy if exists "lectura publica novedades" on storage.objects;
+create policy "lectura publica novedades" on storage.objects
+for select to anon using (bucket_id = 'novedades');
+
+drop policy if exists "subida novedades" on storage.objects;
+create policy "subida novedades" on storage.objects
+for insert to anon, authenticated with check (bucket_id = 'novedades');
+
+drop policy if exists "borrado novedades" on storage.objects;
+create policy "borrado novedades" on storage.objects
+for delete to anon, authenticated using (bucket_id = 'novedades');
 
 -- Programas (gestión completa desde el panel; compatible con el index).
 create table if not exists programas (

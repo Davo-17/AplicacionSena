@@ -29,7 +29,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800&display=swap" rel="stylesheet">
 
     <!-- Archivo CSS -->
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=20260924">
 </head>
 
 <body>
@@ -66,7 +66,7 @@
                 <button class="button button-outline-sm" id="btnRegister">Ingresar</button>
                 <div class="user-menu hidden" id="userMenu">
                   <button class="avatar-btn" id="avatarBtn" type="button" aria-haspopup="true" aria-expanded="false" aria-label="Abrir menú de usuario">
-                    <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?auto=format&fit=crop&w=100&q=80" alt="Foto de perfil" class="user-avatar">
+                    <span class="user-avatar user-icon" role="img" aria-label="Usuario"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-6.5 8-6.5s8 2.5 8 6.5"/></svg></span>
                   </button>
                   <div class="user-dropdown hidden" id="userDropdown" role="menu">
                     <div class="user-dropdown-head">
@@ -429,16 +429,20 @@
     ===================================================== -->
     <button id="chatButton" class="chat-button" type="button" aria-label="Abrir chat con Carmencho">💬</button>
 
-    <div id="chatBox" class="chat-box hidden">
-        <div class="chat-header" id="chatHeader">
+    <div id="chatBox" class="chat-box hidden" role="dialog" aria-label="Chat con Carmencho">
+        <div class="chat-header" id="chatHeader" title="Arrastra para mover">
             <div class="chat-header-title">
-                <span class="drag-icon">⋮⋮</span>
+                <span class="drag-icon" aria-hidden="true">⋮</span>
                 <div class="chat-title-text">
                     <strong>Carmencho</strong>
                     <span class="chat-status">En línea · Asistente DAJESA</span>
                 </div>
             </div>
-            <button id="closeChat" type="button" aria-label="Cerrar chat">&times;</button>
+            <div class="chat-header-actions">
+                <button id="clearChat" type="button" aria-label="Limpiar conversación" title="Limpiar conversación">🗑</button>
+                <button id="resetChatPos" type="button" aria-label="Devolver el panel a su esquina" title="Recolocar panel">⌖</button>
+                <button id="closeChat" type="button" aria-label="Cerrar chat">&times;</button>
+            </div>
         </div>
         <div id="chatMessages" class="chat-messages">
             <div class="bot-message">
@@ -449,10 +453,11 @@
             <input id="chatInput" type="text" placeholder="Escribe tu mensaje..." autocomplete="off">
             <button id="sendMessage" type="button" aria-label="Enviar mensaje">➤</button>
         </div>
+        <span id="chatResize" class="chat-resize" aria-hidden="true"></span>
     </div>
 
     <!-- Archivo JavaScript -->
-    <script src="js/config.js"></script>
-    <script src="js/script.js"></script>
+    <script src="js/config.js?v=20260924"></script>
+    <script src="js/script.js?v=20260924"></script>
 </body>
 </html>

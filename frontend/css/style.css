@@ -143,6 +143,25 @@ nav#mainNav a:hover {
   object-fit: cover;
 }
 
+/* Icono de usuario (sin foto externa) */
+.user-avatar.user-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(57, 169, 0, 0.12);
+  color: var(--primary);
+}
+
+.user-avatar.user-icon svg {
+  width: 22px;
+  height: 22px;
+}
+
+body.dark-mode .user-avatar.user-icon {
+  background: rgba(163, 230, 53, 0.12);
+  color: var(--neon-admin);
+}
+
 /* Menú de usuario: solo la foto; el resto se despliega al presionarla. */
 .user-menu {
   position: relative;
@@ -220,21 +239,22 @@ nav#mainNav a:hover {
 }
 
 body.dark-mode .avatar-btn {
-  background: #0f172a;
+  background: var(--bg-card);
+  border-color: rgba(163, 230, 53, 0.4);
 }
 
 body.dark-mode .user-dropdown {
-  background: #0f172a;
-  border-color: rgba(255, 255, 255, 0.1);
+  background: var(--bg-card);
+  border-color: var(--border-color-theme);
 }
 
 body.dark-mode .user-dropdown-head {
-  background: #111827;
-  border-bottom-color: rgba(255, 255, 255, 0.08);
+  background: var(--bg-card);
+  border-bottom-color: var(--border-color-theme);
 }
 
 body.dark-mode .dropdown-item {
-  color: #f3f4f6;
+  color: #ffffff;
 }
 
 body.dark-mode .dropdown-item:hover {
@@ -847,6 +867,8 @@ body.dark-mode .dropdown-item:hover {
 .news-image {
   position: relative;
   height: 200px;
+  overflow: hidden;
+  background: #e2e8f0;
 }
 
 .news-image img {
@@ -1442,37 +1464,129 @@ footer {
 
 
 
-/* Ajustes para Chatbot Arrastrable */
+/* Panel del chatbot: liquid glass + arrastrable + redimensionable */
 .chat-box {
+  --chat-blur: 16px;
   position: fixed;
   bottom: 5.5rem;
   right: 2rem;
   width: 350px;
   height: 480px;
-  background: var(--white);
-  border-radius: 12px;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+  min-width: 280px;
+  min-height: 360px;
+  max-width: min(440px, calc(100vw - 2rem));
+  max-height: min(640px, calc(100vh - 7rem));
+  background: rgba(255, 255, 255, 0.62);
+  -webkit-backdrop-filter: blur(var(--chat-blur)) saturate(1.5);
+  backdrop-filter: blur(var(--chat-blur)) saturate(1.5);
+  border-radius: 20px;
+  box-shadow: 0 24px 60px rgba(0, 50, 77, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.55);
   display: flex;
   flex-direction: column;
   z-index: 2000;
   overflow: hidden;
-  border: 1px solid var(--border-color);
+  border: 1px solid rgba(255, 255, 255, 0.5);
   touch-action: none;
+  transition: transform 0.35s cubic-bezier(0.2, 1.6, 0.4, 1);
+}
+
+/* Reflejo superior tipo vidrio (no intercepta clics) */
+.chat-box::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 120px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.35), transparent);
+  pointer-events: none;
+  z-index: 3;
+}
+
+.chat-box.is-dragging {
+  box-shadow: 0 32px 80px rgba(0, 50, 77, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  cursor: grabbing;
+  user-select: none;
+}
+
+/* Efecto gelatina al soltar el panel */
+.chat-box.jelly-pop {
+  animation: jelly-pop 0.5s cubic-bezier(0.2, 1.4, 0.4, 1);
+}
+@keyframes jelly-pop {
+  0% { transform: scale(1, 1); }
+  25% { transform: scale(1.04, 0.94); }
+  50% { transform: scale(0.96, 1.05); }
+  75% { transform: scale(1.02, 0.98); }
+  100% { transform: scale(1, 1); }
 }
 
 .chat-header {
-  background: var(--secondary);
+  position: relative;
+  z-index: 4;
+  background: linear-gradient(135deg, rgba(0, 50, 77, 0.82), rgba(57, 169, 0, 0.55));
+  -webkit-backdrop-filter: blur(var(--chat-blur)) saturate(1.4);
+  backdrop-filter: blur(var(--chat-blur)) saturate(1.4);
   color: var(--white);
-  padding: 1rem;
+  padding: 0.8rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.5rem;
   cursor: grab; /* Indica que la barra es arrastrable */
   user-select: none; /* Previene la selección accidental del título mientras se arrastra */
+  border-bottom: 1px solid rgba(255, 255, 255, 0.25);
+  touch-action: none;
 }
 
 .chat-header:active {
   cursor: grabbing;
+}
+
+.chat-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+}
+
+.chat-header-actions button {
+  background: rgba(255, 255, 255, 0.14);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: var(--white);
+  font-size: 1rem;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.chat-header-actions button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.chat-header-actions button:active {
+  transform: scale(0.92);
+}
+
+/* Tirador de redimensión en la esquina inferior izquierda */
+.chat-resize {
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+  width: 18px;
+  height: 18px;
+  cursor: nwse-resize;
+  z-index: 5;
+  opacity: 0.55;
+  background: linear-gradient(135deg, transparent 50%, currentColor 50%);
+  border-bottom-left-radius: 8px;
+  touch-action: none;
+}
+
+.chat-resize:hover {
+  opacity: 1;
 }
 
 .chat-header-title {
@@ -1500,6 +1614,8 @@ footer {
 
 /* Permitir explícitamente selección de texto en los mensajes */
 .chat-messages {
+  position: relative;
+  z-index: 2;
   flex: 1;
   padding: 1rem;
   overflow-y: auto;
@@ -1511,10 +1627,80 @@ footer {
 
 .bot-message, .user-message {
   padding: 0.75rem;
-  border-radius: 8px;
+  border-radius: 14px;
   font-size: 0.85rem;
   max-width: 80%;
   user-select: text; /* Asegura copia del contenido */
+  -webkit-backdrop-filter: blur(calc(var(--chat-blur) / 2));
+  backdrop-filter: blur(calc(var(--chat-blur) / 2));
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  box-shadow: 0 4px 14px rgba(0, 50, 77, 0.08);
+}
+
+.bot-message {
+  background: rgba(241, 245, 249, 0.72);
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+
+.user-message {
+  background: rgba(57, 169, 0, 0.82);
+  color: var(--white);
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+
+.chat-input {
+  position: relative;
+  z-index: 4;
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(var(--chat-blur));
+  backdrop-filter: blur(var(--chat-blur));
+  border-top: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.chat-input input {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+body.dark-mode .chat-box {
+  background: rgba(17, 26, 23, 0.62);
+  border-color: rgba(163, 230, 53, 0.22);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), inset 0 1px 0 rgba(163, 230, 53, 0.15);
+}
+
+body.dark-mode .chat-box::before {
+  background: linear-gradient(180deg, rgba(163, 230, 53, 0.12), transparent);
+}
+
+body.dark-mode .chat-header {
+  background: linear-gradient(135deg, rgba(7, 21, 13, 0.88), rgba(26, 46, 34, 0.72));
+  border-bottom-color: rgba(163, 230, 53, 0.2);
+}
+
+body.dark-mode .bot-message, body.dark-mode .user-message {
+  border-color: rgba(163, 230, 53, 0.18);
+}
+
+body.dark-mode .chat-input {
+  background: rgba(17, 26, 23, 0.55);
+  border-top-color: rgba(163, 230, 53, 0.15);
+}
+
+body.dark-mode .chat-resize {
+  color: var(--neon-admin);
+}
+
+@media (max-width: 480px) {
+  .chat-resize {
+    display: none;
+  }
+  .chat-box {
+    touch-action: auto;
+  }
+  .chat-header {
+    cursor: default;
+  }
 }
 
 
@@ -1542,16 +1728,21 @@ footer {
    MODO OSCURO ISOLADO (NO AFECTA EL MODO CLARO)
 ===================================================== */
 
-/* 1. Variables para el tema oscuro */
+/* 1. Variables para el tema oscuro — paleta del panel admin */
 body.dark-mode {
-  --bg-primary: #0f172a;
-  --bg-secondary: #1e293b;
-  --bg-card: #1e293b;
-  --text-primary: #f8fafc;
-  --text-secondary: #94a3b8;
-  --border-color-theme: #334155;
-  
-  background-color: var(--bg-primary) !important;
+  --bg-primary: #0a0f0d;
+  --bg-secondary: #07150d;
+  --bg-card: #111a17;
+  --bg-panel2: #1a2e22;
+  --neon-admin: #a3e635;
+  --text-primary: #ffffff;
+  --text-secondary: #9ca3af;
+  --border-color-theme: #1f2937;
+
+  background:
+    radial-gradient(circle at 75% 5%, rgba(163, 230, 53, 0.06), transparent 25%),
+    radial-gradient(circle at 10% 90%, rgba(25, 150, 65, 0.07), transparent 30%),
+    var(--bg-primary) !important;
   color: var(--text-primary) !important;
 }
 
@@ -1568,12 +1759,21 @@ body.dark-mode .brand strong {
 }
 
 body.dark-mode .nav-panel {
-  background-color: var(--bg-card) !important;
-  border-color: var(--border-color-theme) !important;
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+@media (max-width: 900px) {
+  body.dark-mode .nav-panel {
+    background-color: var(--bg-card) !important;
+    border-color: var(--border-color-theme) !important;
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5) !important;
+  }
 }
 
 body.dark-mode nav#mainNav a:hover {
-  background-color: var(--bg-primary) !important;
+  background-color: rgba(163, 230, 53, 0.08) !important;
+  color: var(--neon-admin) !important;
 }
 
 body.dark-mode .menu-button {
@@ -1640,8 +1840,8 @@ body.dark-mode .chat-input input {
 
 /* Acordeón de programas en Modo Oscuro */
 body.dark-mode .category-number {
-  background-color: rgba(57, 169, 0, 0.2) !important;
-  color: #4ade80 !important;
+  background-color: rgba(163, 230, 53, 0.12) !important;
+  color: var(--neon-admin) !important;
 }
 
 body.dark-mode .category-count,
@@ -1652,17 +1852,82 @@ body.dark-mode .meta-pill {
 }
 
 body.dark-mode .category-header:hover {
-  background-color: rgba(57, 169, 0, 0.08) !important;
+  background-color: rgba(163, 230, 53, 0.06) !important;
 }
 
 body.dark-mode .program-card a {
-  background-color: rgba(57, 169, 0, 0.15) !important;
-  color: #4ade80 !important;
+  background-color: rgba(163, 230, 53, 0.12) !important;
+  color: var(--neon-admin) !important;
 }
 
 body.dark-mode .program-card a:hover {
-  background-color: var(--primary) !important;
-  color: #fff !important;
+  background-color: var(--neon-admin) !important;
+  color: #071308 !important;
+}
+
+/* =====================================================
+   TOQUES ADMIN (solo modo oscuro): neón #a3e635,
+   panel #111a17 y brillos radiales del admin-react
+===================================================== */
+body.dark-mode header {
+  box-shadow: 0 2px 20px rgba(0, 0, 0, 0.5) !important;
+  border-bottom: 1px solid rgba(163, 230, 53, 0.12) !important;
+}
+body.dark-mode .brand span {
+  color: #ffffff !important;
+}
+body.dark-mode .hero-overlay {
+  background: linear-gradient(90deg, rgba(7, 21, 13, 0.96) 0%, rgba(7, 21, 13, 0.55) 100%) !important;
+}
+body.dark-mode .hero-title .highlight {
+  color: var(--neon-admin) !important;
+}
+body.dark-mode .badge-dot {
+  background: var(--neon-admin) !important;
+  box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.55);
+  animation: admin-pulse-dot 2s infinite;
+}
+@keyframes admin-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(163, 230, 53, 0.55); }
+  50% { box-shadow: 0 0 0 6px rgba(163, 230, 53, 0); }
+}
+body.dark-mode .hero-badge {
+  border: 1px solid rgba(163, 230, 53, 0.25) !important;
+  background: rgba(163, 230, 53, 0.08) !important;
+  color: var(--text-primary) !important;
+}
+body.dark-mode .section-badge-green {
+  background: rgba(163, 230, 53, 0.12) !important;
+  color: var(--neon-admin) !important;
+}
+body.dark-mode .news-tag {
+  background: var(--neon-admin) !important;
+  color: #071308 !important;
+}
+body.dark-mode .news-card,
+body.dark-mode .program-card,
+body.dark-mode .tool-card,
+body.dark-mode .program-category {
+  box-shadow: 0 0 0 1px rgba(163, 230, 53, 0.04) !important;
+}
+body.dark-mode .news-card:hover,
+body.dark-mode .program-card:hover {
+  border-color: rgba(163, 230, 53, 0.35) !important;
+}
+body.dark-mode .button-yellow,
+body.dark-mode .cta-button {
+  background: var(--neon-admin) !important;
+  color: #071308 !important;
+  border-color: transparent !important;
+}
+body.dark-mode .theme-toggle {
+  border-color: rgba(163, 230, 53, 0.3) !important;
+}
+body.dark-mode .evidence-media {
+  border-bottom: 1px solid rgba(163, 230, 53, 0.15) !important;
+}
+body.dark-mode ::-webkit-scrollbar-thumb {
+  background: #22c55e !important;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1695,9 +1960,9 @@ body.dark-mode .theme-icon-dark { display: inline; }
 }
 
 body.dark-mode .answer-card input:checked + .answer-content {
-  border-color: #38bdf8 !important; /* Azul claro brillante para contraste */
-  background-color: #1e293b !important;
-  box-shadow: 0 0 0 2px #38bdf8, 0 0 12px rgba(56, 189, 248, 0.3);
+  border-color: var(--neon-admin) !important;
+  background-color: var(--bg-card) !important;
+  box-shadow: 0 0 0 2px var(--neon-admin), 0 0 12px rgba(163, 230, 53, 0.3);
 }
 
 body.dark-mode .answer-card input:checked + .answer-content .answer-title,
@@ -1749,14 +2014,14 @@ body.dark-mode .theme-toggle:hover {
 /* Arreglo para la tarjeta de resultado en el Quiz */
 body.dark-mode .quiz-result,
 body.dark-mode [class*="result"] {
-  color: #38bdf8 !important;;
+  color: #ffffff !important;
 }
 
 body.dark-mode .quiz-result p,
 body.dark-mode .quiz-result h3,
 body.dark-mode .quiz-result h4,
 body.dark-mode [class*="result"] * {
-  color: #38bdf8 !important; /* Azul claro brillante para legibilidad */
+  color: #ffffff !important;
   font-weight: 600 !important;
 }
 
@@ -1860,15 +2125,15 @@ body.dark-mode [class*="result"] * {
 
 /* Modo Oscuro para los controles */
 body.dark-mode .search-filter-container {
-  background-color: #1e293b !important;
-  border-color: #334155 !important;
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-color-theme) !important;
 }
 
 body.dark-mode .search-box input,
 body.dark-mode .filter-group select {
-  background-color: #0f172a !important;
-  border-color: #334155 !important;
-  color: #f8fafc !important;
+  background-color: var(--bg-primary) !important;
+  border-color: var(--border-color-theme) !important;
+  color: #ffffff !important;
 }
 
 /* =====================================================
@@ -1927,12 +2192,12 @@ body.dark-mode .filter-group select {
   cursor: wait;
 }
 body.dark-mode .quick-replies .chip {
-  background: #0f172a !important;
-  border-color: #38bdf8 !important;
-  color: #e0f2fe !important;
+  background: var(--bg-card) !important;
+  border-color: rgba(163, 230, 53, 0.4) !important;
+  color: var(--neon-admin) !important;
 }
 body.dark-mode .bot-message a {
-  color: #38bdf8 !important;
+  color: var(--neon-admin) !important;
 }
 @media (max-width: 480px) {
   .chat-box {
@@ -1944,5 +2209,287 @@ body.dark-mode .bot-message a {
   .chat-button {
     right: 1rem;
     bottom: 1rem;
+  }
+}
+
+/* =====================================================
+   EVIDENCIAS — organización uniforme independiente
+   de la imagen subida (vertical, panorámica o pequeña)
+===================================================== */
+.evidence-card {
+  display: flex;
+  flex-direction: column;
+}
+.evidence-card .news-content {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  flex: 1;
+}
+.evidence-media {
+  /* Mismo marco para todas: proporción fija + recorte centrado */
+  aspect-ratio: 16 / 10;
+  height: auto;
+  min-height: 200px;
+  max-height: 240px;
+  overflow: hidden;
+  background: linear-gradient(135deg, #1a2e22 0%, #39a900 130%);
+}
+.evidence-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  background: #07150d;
+}
+.evidence-media.is-empty,
+.evidence-media.is-broken {
+  display: grid;
+  place-items: center;
+}
+.ev-placeholder {
+  color: rgba(255, 255, 255, 0.85);
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  font-size: 0.8rem;
+}
+.ev-count {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+.ev-thumbs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+.ev-thumb {
+  display: block;
+  aspect-ratio: 1 / 1;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-color);
+  background: #eef2f5;
+}
+.ev-thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+body.dark-mode .ev-thumb {
+  border-color: var(--border-color-theme);
+  background: var(--bg-card);
+}
+
+/* Uniformidad total modo oscuro: CTA, footer y pill con verde admin */
+body.dark-mode .cta-section {
+  background: var(--bg-secondary) !important;
+  border-top: 1px solid rgba(163, 230, 53, 0.15) !important;
+  border-bottom: 1px solid rgba(163, 230, 53, 0.15) !important;
+}
+body.dark-mode footer {
+  background: var(--bg-secondary) !important;
+  border-top: 1px solid rgba(163, 230, 53, 0.12) !important;
+}
+body.dark-mode .cta-label,
+body.dark-mode .footer-status {
+  color: var(--neon-admin) !important;
+}
+body.dark-mode .pill {
+  background: rgba(163, 230, 53, 0.12) !important;
+  color: var(--neon-admin) !important;
+}
+body.dark-mode .stat strong {
+  color: var(--neon-admin) !important;
+}
+/* =====================================================
+   DETALLE DE EVIDENCIA (modal para el aprendiz)
+===================================================== */
+.evidence-card[data-ev] {
+  cursor: pointer;
+}
+
+.evidence-card[data-ev]:hover {
+  border-color: var(--primary);
+}
+
+.evidence-card[data-ev]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+.ev-more {
+  display: inline-block;
+  margin-top: 0.6rem;
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.85rem;
+}
+
+.ev-modal[hidden] {
+  display: none;
+}
+
+.ev-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+}
+
+.ev-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 20, 30, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+.ev-modal-card {
+  position: relative;
+  width: min(720px, 100%);
+  max-height: min(88vh, 800px);
+  overflow-y: auto;
+  background: var(--white);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+  animation: ev-in 0.25s ease both;
+}
+
+@keyframes ev-in {
+  from { opacity: 0; transform: translateY(12px) scale(0.98); }
+  to { opacity: 1; transform: none; }
+}
+
+.ev-modal-close {
+  position: absolute;
+  top: 0.7rem;
+  right: 0.7rem;
+  z-index: 2;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.ev-modal-close:hover {
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.ev-modal-media {
+  aspect-ratio: 16 / 9;
+  max-height: 380px;
+  overflow: hidden;
+  background: #0b1f2a;
+  border-radius: 16px 16px 0 0;
+}
+
+.ev-modal-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+}
+
+.ev-modal-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem 0;
+  overflow-x: auto;
+}
+
+.ev-modal-thumbs img {
+  width: 76px;
+  height: 56px;
+  object-fit: cover;
+  border-radius: 8px;
+  cursor: pointer;
+  border: 2px solid transparent;
+  flex-shrink: 0;
+}
+
+.ev-modal-thumbs img.active {
+  border-color: var(--primary);
+}
+
+.ev-modal-body {
+  padding: 1.1rem 1.5rem 1.6rem;
+}
+
+.ev-modal-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.5rem;
+}
+
+.ev-modal-tag {
+  background: var(--primary);
+  color: #fff;
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: capitalize;
+}
+
+.ev-modal-body h3 {
+  font-size: 1.3rem;
+  margin: 0.3rem 0 0.6rem;
+  color: var(--secondary);
+}
+
+.ev-modal-body p {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  white-space: pre-line;
+}
+
+body.dark-mode .ev-modal-card {
+  background: var(--bg-card);
+  border-color: var(--border-color-theme);
+}
+
+body.dark-mode .ev-modal-body h3 {
+  color: #ffffff;
+}
+
+body.dark-mode .ev-more {
+  color: var(--neon-admin);
+}
+
+body.dark-mode .ev-modal-tag {
+  background: var(--neon-admin);
+  color: #071308;
+}
+
+body.dark-mode .ev-modal-thumbs img.active {
+  border-color: var(--neon-admin);
+}
+
+@media (max-width: 560px) {
+  .ev-modal {
+    padding: 0.75rem;
+  }
+  .ev-modal-body {
+    padding: 1rem 1.1rem 1.4rem;
   }
 }

@@ -284,6 +284,61 @@
                 </form>
 
 
+                <!-- SEGUNDO PASO: código de verificación (3 minutos) -->
+                <form id="verifyForm" class="login-form" hidden>
+
+                    <div class="verify-announce">
+                        <div class="verify-icon">✉</div>
+                        <h3>Verifica tu identidad</h3>
+                        <p>
+                            Enviamos un código de <strong>6 dígitos</strong> a<br>
+                            <strong id="verifyEmail"></strong>
+                        </p>
+                        <div id="verifyTimer" class="verify-timer" role="timer" aria-label="Tiempo restante">3:00</div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>CÓDIGO DE VERIFICACIÓN</label>
+                        <div class="input-container">
+                            <input
+                                type="text"
+                                id="verifyCode"
+                                class="code-input"
+                                placeholder="••••••"
+                                inputmode="numeric"
+                                autocomplete="one-time-code"
+                                maxlength="6"
+                                required
+                            >
+                        </div>
+                    </div>
+
+                    <div id="verifyError" class="error-message">
+                        <span>!</span>
+                        <p></p>
+                    </div>
+
+                    <button
+                        type="submit"
+                        id="verifyButton"
+                        class="login-button"
+                    >
+                        <span id="verifyButtonText">Verificar e ingresar</span>
+                        <span id="verifyLoader" class="loader"></span>
+                        <span class="arrow">→</span>
+                    </button>
+
+                    <button type="button" id="verifyResend" class="link-button">
+                        Reenviar código
+                    </button>
+
+                    <button type="button" id="verifyBack" class="link-button">
+                        ← Usar otro correo
+                    </button>
+
+                </form>
+
+
                 <!-- FOOTER -->
                 <div class="card-footer">
 

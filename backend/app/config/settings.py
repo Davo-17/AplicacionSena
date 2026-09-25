@@ -41,6 +41,8 @@ class Settings(BaseSettings):
     supabase_anon_key: str = "cambia-esto"
     supabase_service_role_key: str = "cambia-esto"
     supabase_jwt_secret: str = "cambia-esto"
+    # Correos que entran solo con contraseña (sin código de verificación).
+    otp_exentos: Annotated[list[str], NoDecode, BeforeValidator(_separar_origenes)] = []
     rate_limit_auth: str = "5/minute"
     rate_limit_default: str = "30/minute"
 

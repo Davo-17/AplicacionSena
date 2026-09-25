@@ -76,6 +76,13 @@ def crear_app() -> FastAPI:
         async def favicon() -> FileResponse:
             return FileResponse(favicon_path, media_type="image/png")
 
+    # --- Panel antiguo: redirección directa en servidor ---
+    # Sin esto se servía frontend/admin.html (pantalla blanca con texto)
+    # antes de saltar a /admin/. Con ruta expresa no se pinta nada.
+    @app.get("/admin.html", include_in_schema=False)
+    async def admin_legacy() -> RedirectResponse:
+        return RedirectResponse(url="/admin/", status_code=308)
+
     # --- Panel admin React en /admin (misma URL, sin CORS) ---
     # Se sirve lo construido con `npm run build` en admin-react/dist.
     # Es una SPA: /admin y /admin/<ruta> devuelven index.html.

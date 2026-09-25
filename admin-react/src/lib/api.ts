@@ -88,6 +88,7 @@ export interface Novedad {
   descripcion: string;
   fecha: string;
   etiqueta: string;
+  imagen: string;
 }
 export type NovedadIn = Omit<Novedad, "id">;
 
@@ -124,6 +125,12 @@ export interface StorageStatus {
   bucket: boolean;
   puede_subir: boolean;
   detalle: string;
+}
+
+export interface UsuarioGestion {
+  id: string;
+  email: string;
+  rol: string;
 }
 
 /* ===== Auth ===== */
@@ -188,6 +195,15 @@ export const api = {
     crear: (d: NovedadIn) => crear<Novedad, NovedadIn>("novedades", d),
     editar: (id: number, d: NovedadIn) => editar<Novedad, NovedadIn>("novedades", id, d),
     borrar: (id: number) => borrar("novedades", id),
+    status: () => apiFetch<StorageStatus>("/novedades/status"),
+    subir: async (archivo: File): Promise<{ url: string; ruta: string }> => {
+      const form = new FormData();
+      form.append("archivo", archivo);
+      return apiFetch<{ url: string; ruta: string }>("/novedades/upload", {
+        method: "POST",
+        body: form,
+      });
+    },
   },
   fichas: {
     listar: () => listar<Ficha>("fichas"),
@@ -202,8 +218,7 @@ export const api = {
       editar<Postulacion, PostulacionIn>("postulaciones", id, d),
     borrar: (id: number) => borrar("postulaciones", id),
   },
-  evidencias: {
-    listar: (ficha: string) =>
+  evidencias: {    listar: (ficha: string) =>
       apiFetch<Evidencia[]>(`/evidencias?ficha=${encodeURIComponent(ficha)}`),
     crear: (d: EvidenciaIn) => crear<Evidencia, EvidenciaIn>("evidencias", d),
     borrar: (id: number) => borrar("evidencias", id),
@@ -217,6 +232,14 @@ export const api = {
         { method: "POST", body: form },
       );
     },
+  },
+  usuarios: {
+    listar: () => apiFetch<UsuarioGestion[]>("/auth/usuarios"),
+    cambiarRol: (email: string, rol: string) =>
+      apiFetch<{ ok: boolean; email: string; rol: string }>("/auth/usuarios/rol", {
+        method: "PUT",
+        body: JSON.stringify({ email, rol }),
+      }),
   },
 };
 

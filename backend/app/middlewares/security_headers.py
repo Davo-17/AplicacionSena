@@ -12,10 +12,12 @@ class SecurityHeadersMiddleware(BaseHTTPMiddleware):
         """Intercepta la respuesta y le inyecta las cabeceras seguras."""
         response = await call_next(request)  # type: ignore[operator]
         # CSP relajado para demo: permite Google Fonts e imágenes externas
-        # (Unsplash). En producción se endurece a 'self'.
+        # (Unsplash). `blob:` es necesario para las vistas previas locales
+        # del panel (URL.createObjectURL): son URLs efímeras del mismo origen
+        # creadas por nuestro propio JS, no contenido externo.
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "img-src 'self' https: data:; "
+            "img-src 'self' https: data: blob:; "
             "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; "
             "script-src 'self'; "

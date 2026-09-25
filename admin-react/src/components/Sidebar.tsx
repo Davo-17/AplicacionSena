@@ -6,6 +6,7 @@ import {
   History,
   Megaphone,
   ShieldCheck,
+  Users,
 } from "lucide-react";
 import { cn } from "../lib/cn";
 
@@ -18,6 +19,7 @@ const ITEMS: Array<{ id: string; label: string; Icon: LucideIcon; dot?: boolean;
   { id: "fichas", label: "Fichas", Icon: FileText },
   { id: "bitacora", label: "Bitácora", Icon: History },
   { id: "archivos", label: "Archivos", Icon: Files, target: "bitacora" },
+  { id: "usuarios", label: "Usuarios", Icon: Users },
 ];
 
 export default function Sidebar({

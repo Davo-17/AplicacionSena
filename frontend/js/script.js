@@ -148,17 +148,29 @@ document.addEventListener("DOMContentLoaded", () => {
   cargarProgramas();
 
   // ---------- 2b. NOVEDADES (vienen del backend, las publica el admin) ----------
+  // Fotos de apoyo: mismo diseño de las tarjetas fijas. Se usan solo cuando
+  // la novedad aún no trae portada propia del panel.
+  const NOVEDADES_APOYO = [
+    "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1531482615713-2afd69097998?auto=format&fit=crop&w=600&q=80",
+    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?auto=format&fit=crop&w=600&q=80",
+  ];
   async function cargarNovedades() {
     const grid = document.getElementById("newsGrid");
     if (!grid) return;
     try {
       const novedades = await pedir(API_URL + "/novedades");
       if (!novedades.length) return; // sin datos: se quedan las fijas del HTML
-      grid.innerHTML = novedades.slice(0, 3).map((n) => `
+      grid.innerHTML = novedades.slice(0, 3).map((n, i) => {
+        const apoyo = NOVEDADES_APOYO[i % NOVEDADES_APOYO.length];
+        // Portada real del admin; cualquier tamaño se recorta igual (cover 200px).
+        const img = n.imagen || apoyo;
+        return `
         <article class="news-card">
-          <div class="news-image"><img src="https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&w=600&q=80" alt=""><span class="news-tag">${n.etiqueta || "Noticia"}</span></div>
+          <div class="news-image"><img src="${escHtml(img)}" alt="${escHtml(n.titulo || "Novedad")}" loading="lazy" onerror="this.onerror=null;this.src='${apoyo}'"><span class="news-tag">${n.etiqueta || "Noticia"}</span></div>
           <div class="news-content"><span class="news-date">${n.fecha || ""}</span><h3>${n.titulo}</h3><p>${n.descripcion || ""}</p></div>
-        </article>`).join("");
+        </article>`;
+      }).join("");
     } catch (err) {
       console.warn("Novedades offline, muestro las fijas.", err);
     }
@@ -180,12 +192,21 @@ document.addEventListener("DOMContentLoaded", () => {
       // Sin token: el backend solo devuelve visible=true (lo público).
       const items = await pedir(API_URL + "/evidencias");
       if (!items.length) return; // sin datos: se queda el aviso fijo del HTML
-      grid.innerHTML = items.slice(0, 6).map((e) => {
-        const img = (e.imagenes && e.imagenes[0])
-          ? `<div class="news-image"><img src="${escHtml(e.imagenes[0])}" alt="${escHtml(e.titulo || "Evidencia")}" loading="lazy"><span class="news-tag">${escHtml(e.tipo || "Actividad")}</span></div>`
+      evidenciasCache = items.slice(0, 6);
+      grid.innerHTML = evidenciasCache.map((e, idx) => {
+        const imagenes = Array.isArray(e.imagenes) ? e.imagenes.filter(Boolean) : [];
+        const portada = imagenes[0] || "";
+        const extras = imagenes.slice(1, 4);
+        // Marco uniforme: la portada siempre ocupa el mismo espacio (16/10 + cover),
+        // sin importar si la foto subida es vertical, panorámica o pequeña.
+        const media = portada
+          ? `<div class="news-image evidence-media"><img src="${escHtml(portada)}" alt="${escHtml(e.titulo || "Evidencia")}" loading="lazy" onerror="this.closest('.evidence-media')?.classList.add('is-broken');this.remove()"><span class="news-tag">${escHtml(e.tipo || "Actividad")}</span>${extras.length ? `<span class="ev-count">+${extras.length} foto${extras.length > 1 ? "s" : ""}</span>` : ""}</div>`
+          : `<div class="news-image evidence-media is-empty" aria-hidden="true"><span class="ev-placeholder">SENA · CFDCM</span><span class="news-tag">${escHtml(e.tipo || "Actividad")}</span></div>`;
+        const thumbs = extras.length
+          ? `<div class="ev-thumbs">${extras.map((u, i) => `<span class="ev-thumb"><img src="${escHtml(u)}" alt="${escHtml(e.titulo || "Evidencia")} foto ${i + 2}" loading="lazy" onerror="this.closest('.ev-thumb')?.remove()"></span>`).join("")}</div>`
           : "";
-        return `<article class="news-card">${img}
-          <div class="news-content"><span class="news-date">Ficha ${escHtml(e.ficha_numero || "")} · ${escHtml(e.fecha || "")}</span><h3>${escHtml(e.titulo || "Actividad SENA")}</h3><p>${escHtml(e.descripcion || "")}</p></div>
+        return `<article class="news-card evidence-card" data-ev="${idx}" tabindex="0" role="button" aria-label="Ver detalle: ${escHtml(e.titulo || "Actividad SENA")}">${media}
+          <div class="news-content"><span class="news-date">Ficha ${escHtml(e.ficha_numero || "")} · ${escHtml(e.fecha || "")}</span><h3>${escHtml(e.titulo || "Actividad SENA")}</h3><p>${escHtml(e.descripcion || "")}</p>${thumbs}<span class="ev-more">Ver detalle →</span></div>
         </article>`;
       }).join("");
     } catch (err) {
@@ -194,6 +215,104 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   cargarEvidenciasPublicas();
+
+  // ---------- 2d. DETALLE DE EVIDENCIA (modal para el aprendiz) ----------
+  // Clic en la tarjeta: galería completa + qué se hizo, con detalle.
+  let evidenciasCache = [];
+  let evOrigenFoco = null;
+
+  function asegurarModal() {
+    let modal = document.getElementById("evModal");
+    if (modal) return modal;
+    modal = document.createElement("div");
+    modal.id = "evModal";
+    modal.className = "ev-modal";
+    modal.hidden = true;
+    modal.innerHTML =
+      '<div class="ev-modal-backdrop" data-close></div>' +
+      '<div class="ev-modal-card" role="dialog" aria-modal="true" aria-label="Detalle de evidencia">' +
+      '<button type="button" class="ev-modal-close" data-close aria-label="Cerrar detalle">×</button>' +
+      '<div class="ev-modal-media"><img id="evModalImg" alt="Foto de la evidencia"></div>' +
+      '<div id="evModalThumbs" class="ev-modal-thumbs"></div>' +
+      '<div class="ev-modal-body">' +
+      '<div class="ev-modal-meta"><span id="evModalTag" class="ev-modal-tag"></span><span id="evModalDate" class="news-date"></span></div>' +
+      "<h3 id='evModalTitle'></h3>" +
+      "<p id='evModalDesc'></p>" +
+      "</div></div>";
+    document.body.appendChild(modal);
+    modal.addEventListener("click", (e) => {
+      if (e.target.closest("[data-close]")) cerrarDetalle();
+      const t = e.target.closest(".ev-modal-thumbs img");
+      if (t) {
+        const grande = document.getElementById("evModalImg");
+        grande.src = t.src;
+        grande.alt = t.alt;
+        modal.querySelectorAll(".ev-modal-thumbs img").forEach((m) => m.classList.remove("active"));
+        t.classList.add("active");
+      }
+    });
+    return modal;
+  }
+
+  function abrirDetalle(idx) {
+    const e = evidenciasCache[idx];
+    if (!e) return;
+    const modal = asegurarModal();
+    evOrigenFoco = document.activeElement;
+    const imagenes = Array.isArray(e.imagenes) ? e.imagenes.filter(Boolean) : [];
+    const grande = document.getElementById("evModalImg");
+    const media = modal.querySelector(".ev-modal-media");
+    if (imagenes.length) {
+      media.style.display = "";
+      grande.src = imagenes[0];
+      grande.alt = e.titulo || "Evidencia";
+    } else {
+      media.style.display = "none";
+    }
+    const tira = document.getElementById("evModalThumbs");
+    tira.innerHTML = "";
+    imagenes.forEach((u, i) => {
+      const img = document.createElement("img");
+      img.src = u;
+      img.alt = (e.titulo || "Evidencia") + " foto " + (i + 1);
+      img.loading = "lazy";
+      if (i === 0) img.classList.add("active");
+      img.onerror = () => img.remove();
+      tira.appendChild(img);
+    });
+    tira.style.display = imagenes.length > 1 ? "" : "none";
+    document.getElementById("evModalTag").textContent = e.tipo || "Actividad";
+    document.getElementById("evModalDate").textContent =
+      "Ficha " + (e.ficha_numero || "") + " · " + (e.fecha || "");
+    document.getElementById("evModalTitle").textContent = e.titulo || "Actividad SENA";
+    document.getElementById("evModalDesc").textContent =
+      e.descripcion || "Sin detalle registrado.";
+    modal.hidden = false;
+    document.body.style.overflow = "hidden";
+    modal.querySelector(".ev-modal-close").focus();
+  }
+
+  function cerrarDetalle() {
+    const modal = document.getElementById("evModal");
+    if (!modal) return;
+    modal.hidden = true;
+    document.body.style.overflow = "";
+    if (evOrigenFoco && evOrigenFoco.focus) evOrigenFoco.focus();
+  }
+
+  document.getElementById("evidenceGrid")?.addEventListener("click", (e) => {
+    const card = e.target.closest(".evidence-card[data-ev]");
+    if (card) abrirDetalle(Number(card.dataset.ev));
+  });
+  document.getElementById("evidenceGrid")?.addEventListener("keydown", (e) => {
+    if ((e.key === "Enter" || e.key === " ") && e.target.matches(".evidence-card[data-ev]")) {
+      e.preventDefault();
+      abrirDetalle(Number(e.target.dataset.ev));
+    }
+  });
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !document.getElementById("evModal")?.hidden) cerrarDetalle();
+  });
 
   // Acordeón de categorías.
   document.querySelectorAll(".category-header").forEach((btn) => {
@@ -394,7 +513,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await pedir(API_URL + "/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ mensaje: texto }),
+        body: JSON.stringify({ mensaje: texto, detalle: "corto" }),
       });
       ocultarEscribiendo();
       agregarBurbujaHTML(formatearBot(data.respuesta || "Te escucho, ¿me cuentas un poco más?"), "bot-message");
@@ -410,6 +529,177 @@ document.addEventListener("DOMContentLoaded", () => {
       chatInput.focus();
     }
   }
+
+  // ---------- 6b. PANEL DEL CHAT: mover (con gelatina), tamaño y detalle ----------
+  // Vive al nivel del DOMContentLoaded: sus listeners se activan al cargar,
+  // no dentro de enviarMensaje. La posición/tamaño/detalle persisten.
+  const chatHeader = document.getElementById("chatHeader");
+  const clearChat = document.getElementById("clearChat");
+  const resetChatPos = document.getElementById("resetChatPos");
+  const chatResize = document.getElementById("chatResize");
+  const esMovil = () => window.matchMedia("(max-width: 480px)").matches;
+
+  function leer(key, fallback) {
+    try {
+      const v = localStorage.getItem(key);
+      return v === null ? fallback : JSON.parse(v);
+    } catch {
+      return fallback;
+    }
+  }
+  function guardar(key, valor) {
+    try {
+      localStorage.setItem(key, JSON.stringify(valor));
+    } catch {
+      /* almacenamiento lleno o bloqueado: el panel igual funciona */
+    }
+  }
+
+  // Estado guardado: posición y tamaño del panel.
+  (function aplicarGuardados() {
+    const pos = leer("carmencho-pos", null);
+    if (pos && !esMovil() && pos.left >= 0 && pos.top >= 0 &&
+        pos.left < window.innerWidth - 100 && pos.top < window.innerHeight - 100) {
+      chatBox.style.left = pos.left + "px";
+      chatBox.style.top = pos.top + "px";
+      chatBox.style.right = "auto";
+      chatBox.style.bottom = "auto";
+    }
+    const size = leer("carmencho-size", null);
+    if (size && !esMovil()) {
+      chatBox.style.width = size.w + "px";
+      chatBox.style.height = size.h + "px";
+    }
+    try {
+      localStorage.removeItem("carmencho-wide");
+      localStorage.removeItem("carmencho-blur");
+      localStorage.removeItem("carmencho-detalle");
+    } catch {
+      /* noop */
+    }
+  })();
+
+  // Arrastrar desde la cabecera (mouse y táctil).
+  // Los botones no arrastran: cada uno hace su propia acción.
+  // Listeners en window: el panel sigue al cursor aunque salga de la barra.
+  chatHeader?.addEventListener("pointerdown", (e) => {
+    if (esMovil()) return;
+    if (e.pointerType === "mouse" && e.button !== 0) return;
+    if (e.target.closest("button, select, input")) return;
+    e.preventDefault();
+    const rect = chatBox.getBoundingClientRect();
+    const dx = e.clientX - rect.left;
+    const dy = e.clientY - rect.top;
+    let ultimoX = e.clientX;
+    chatBox.classList.add("is-dragging");
+    chatBox.classList.remove("jelly-pop");
+    const mover = (ev) => {
+      const x = Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 80);
+      const y = Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 60);
+      chatBox.style.left = x + "px";
+      chatBox.style.top = y + "px";
+      chatBox.style.right = "auto";
+      chatBox.style.bottom = "auto";
+      // Gelatina: el panel se inclina según la velocidad horizontal.
+      const vel = ev.clientX - ultimoX;
+      ultimoX = ev.clientX;
+      const sesgo = Math.max(-7, Math.min(7, vel * 0.4));
+      const estiron = 1 + Math.min(0.025, Math.abs(vel) * 0.0006);
+      chatBox.style.transform = `skewX(${-sesgo}deg) scale(${estiron})`;
+    };
+    const soltar = (ev) => {
+      window.removeEventListener("pointermove", mover);
+      window.removeEventListener("pointerup", soltar);
+      window.removeEventListener("pointercancel", soltar);
+      chatBox.classList.remove("is-dragging");
+      chatBox.style.transform = "";
+      // Rebote gelatinoso al soltar.
+      chatBox.classList.remove("jelly-pop");
+      void chatBox.offsetWidth;
+      chatBox.classList.add("jelly-pop");
+      setTimeout(() => chatBox.classList.remove("jelly-pop"), 550);
+      guardar("carmencho-pos", {
+        left: Math.round(Math.min(Math.max(0, ev.clientX - dx), window.innerWidth - 80)),
+        top: Math.round(Math.min(Math.max(0, ev.clientY - dy), window.innerHeight - 60)),
+      });
+    };
+    window.addEventListener("pointermove", mover);
+    window.addEventListener("pointerup", soltar);
+    window.addEventListener("pointercancel", soltar);
+  });
+
+  function recolocar() {
+    chatBox.style.left = "";
+    chatBox.style.top = "";
+    chatBox.style.right = "";
+    chatBox.style.bottom = "";
+    chatBox.style.width = "";
+    chatBox.style.height = "";
+    try {
+      localStorage.removeItem("carmencho-pos");
+      localStorage.removeItem("carmencho-size");
+    } catch {
+      /* noop */
+    }
+  }
+  resetChatPos?.addEventListener("click", recolocar);
+
+  // Doble clic en la cabecera: volver a la esquina.
+  chatHeader?.addEventListener("dblclick", (e) => {
+    if (e.target.closest("button")) return;
+    recolocar();
+  });
+
+  // Redimensionar desde la esquina inferior izquierda.
+  chatResize?.addEventListener("pointerdown", (e) => {
+    if (esMovil()) return;
+    e.preventDefault();
+    e.stopPropagation();
+    const rect = chatBox.getBoundingClientRect();
+    const startX = e.clientX;
+    const startY = e.clientY;
+    const startW = rect.width;
+    const startH = rect.height;
+    const startLeft = rect.left;
+    const startTop = rect.top;
+    // Fijamos la esquina superior derecha y movemos la inferior izquierda.
+    chatBox.style.left = startLeft + "px";
+    chatBox.style.top = startTop + "px";
+    chatBox.style.right = "auto";
+    chatBox.style.bottom = "auto";
+    const redim = (ev) => {
+      const w = Math.min(Math.max(280, startW - (ev.clientX - startX)), Math.min(440, window.innerWidth - 32));
+      const h = Math.min(Math.max(360, startH + (ev.clientY - startY)), Math.min(640, window.innerHeight - 112));
+      chatBox.style.width = w + "px";
+      chatBox.style.height = h + "px";
+      chatBox.style.left = (startLeft + (startW - w)) + "px";
+    };
+    const fin = () => {
+      window.removeEventListener("pointermove", redim);
+      window.removeEventListener("pointerup", fin);
+      window.removeEventListener("pointercancel", fin);
+      guardar("carmencho-size", {
+        w: Math.round(chatBox.getBoundingClientRect().width),
+        h: Math.round(chatBox.getBoundingClientRect().height),
+      });
+      guardar("carmencho-pos", {
+        left: Math.round(chatBox.getBoundingClientRect().left),
+        top: Math.round(chatBox.getBoundingClientRect().top),
+      });
+    };
+    window.addEventListener("pointermove", redim);
+    window.addEventListener("pointerup", fin);
+    window.addEventListener("pointercancel", fin);
+  });
+
+  // Papelera: limpia la conversación y deja el saludo inicial.
+  clearChat?.addEventListener("click", () => {
+    const mensajes = [...chatMessages.children];
+    mensajes.slice(1).forEach((m) => m.remove());
+    pintarChips(CHIPS_INICIALES);
+    chatMessages.scrollTop = 0;
+    chatInput?.focus();
+  });
 
   function agregarBurbuja(texto, clase) {
     const div = document.createElement("div");

@@ -33,6 +33,7 @@ export default function CrudSection<T extends { id: number }>({
   renderItem,
   renderRow,
   tableHead,
+  formExtra,
   onSubmit,
   onCancel,
   onEdit,
@@ -54,6 +55,7 @@ export default function CrudSection<T extends { id: number }>({
   renderItem?: (item: T, acc: { onEdit: () => void; onDelete: () => void }) => ReactNode;
   renderRow?: (item: T, acc: { onEdit: () => void; onDelete: () => void }) => ReactNode;
   tableHead?: string[];
+  formExtra?: ReactNode;
   onSubmit: () => Promise<void>;
   onCancel: () => void;
   onEdit: (item: T) => void;
@@ -123,6 +125,7 @@ export default function CrudSection<T extends { id: number }>({
             )}
           </Field>
         ))}
+        {formExtra}
         <PrimaryButton type="submit" disabled={enviando} className="w-full disabled:opacity-60">
           {enviando ? "Guardando…" : editing ? submitEdit : submitNew}
         </PrimaryButton>

@@ -11,6 +11,7 @@ con texto corto + sugerencias de seguimiento.
 
 import re
 import unicodedata
+from typing import Literal
 
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
@@ -26,9 +27,14 @@ SOFIA_BUSCAR = "https://oferta.senasofiaplus.edu.co/sofia-oferta/buscar-oferta.h
 
 
 class ChatRequest(BaseModel):
-    """Lo que envía el frontend."""
+    """Lo que envía el frontend.
+
+    detalle: "corto" (listas de 3-6) o "detallado" (listas de hasta 10,
+    con mayor alcance). El frontend viejo solo manda `mensaje`.
+    """
 
     mensaje: str = Field(min_length=1, max_length=500)
+    detalle: Literal["corto", "detallado"] = "corto"
 
 
 class ChatResponse(BaseModel):
@@ -153,13 +159,46 @@ def _linea_programa(p: dict) -> str:
 SUGERENCIAS_BASE = ["Ver programas", "Inscribirme", "Requisitos", "¿Es gratis?", "Novedades"]
 
 
+def _buscar_area(claves: list[str], limite: int) -> list[dict]:
+    """Programas cuyo nombre o descripción menciona el área buscada."""
+    resultados = []
+    for p in _cargar_programas():
+        hay = _norm(_titulo(p) + " " + str(p.get("descripcion", "")))
+        if _contiene(hay, claves):
+            resultados.append(p)
+        if len(resultados) >= limite:
+            break
+    return resultados
+
+
+def _respuesta_area(nombre: str, claves: list[str], ejemplo: str, detallado: bool) -> ChatResponse:
+    encontrados = _buscar_area(claves, 10 if detallado else 4)
+    if encontrados:
+        lineas = "\n".join(_linea_programa(p) for p in encontrados)
+        return ChatResponse(
+            respuesta=f"En {nombre} tenemos:\n{lineas}\n¿Te gusta alguno? Te explico cómo inscribirte.",
+            sugerencias=["Inscribirme", "Requisitos", "Ver programas"],
+        )
+    return ChatResponse(
+        respuesta=(
+            f"Buena elección. {ejemplo} "
+            "Escríbela en el filtro 'Buscar programa' y verás las opciones con su botón 'Inscribirme' directo a Sofia Plus."
+        ),
+        sugerencias=["Ver programas", "Inscribirme"],
+    )
+
+
 # ------------------------------------------------------------------
 # Cerebro del bot
 # ------------------------------------------------------------------
 
 
-def _responder(mensaje: str) -> ChatResponse:
+def _responder(mensaje: str, detallado: bool = False) -> ChatResponse:
     texto = _norm(mensaje)
+
+    def _corte(lista: list, base: int) -> list:
+        """Cuántos elementos listar: corto (3-6) o detallado (hasta 10)."""
+        return lista[:10] if detallado else lista[:base]
 
     # 0. Muy corto / sin sentido -> pedir aclaración útil
     if len(texto) < 2:
@@ -216,6 +255,17 @@ def _responder(mensaje: str) -> ChatResponse:
             sugerencias=["Requisitos", "Ver programas", "¿Es gratis?", "Novedades"],
         )
 
+    # 4b. Certificado / título al egresar (antes de requisitos: "certificado"
+    # suelto aquí significa el diploma, no el certificado de estudios).
+    if _contiene(texto, ["dan certificado", "dan titulo", "dan diploma", "certifican", "diploma", "me graduo", "egresado", "titulo me dan", "titulo obtengo", "titulacion"]):
+        return ChatResponse(
+            respuesta=(
+                "Sí: al aprobar obtienes certificado o título SENA (técnico o tecnólogo según el nivel), "
+                "válido en todo el país para trabajar o seguir estudiando. La ceremonia de certificación la anuncia tu centro."
+            ),
+            sugerencias=["Ver programas", "Inscribirme", "Requisitos"],
+        )
+
     # 5. Requisitos / documentos
     if _contiene(texto, ["requisito", "documento", "papeles", "papel", "necesito para", "que piden", "bachiller", "certificado", "icfes"]) or _palabra(texto, "edad"):
         return ChatResponse(
@@ -248,7 +298,7 @@ def _responder(mensaje: str) -> ChatResponse:
         )
     if _contiene(texto, ["me gusta tecnologia", "me gusta la tecnologia", "soy de tecnologia"]):
         programas = [p for p in _cargar_programas() if _nivel_norm(p) == "tecnologia"]
-        top = programas[:3] if programas else []
+        top = _corte(programas, 3) if programas else []
         detalle = "\n".join(_linea_programa(p) for p in top) if top else "• ADSO\n• Diseño y Desarrollo de Redes"
         return ChatResponse(
             respuesta=f"Si te gusta la tecnología, mira estos:\n{detalle}\n¿Quieres inscribirte en alguno?",
@@ -264,7 +314,7 @@ def _responder(mensaje: str) -> ChatResponse:
     if _contiene(texto, ["novedad", "noticia", "convocatoria", "evento", "feria", "bootcamp", "noticias"]):
         novedades = _cargar_novedades()
         if novedades:
-            lineas = "\n".join(f"• {n.get('titulo', 'Novedad')} ({n.get('fecha', '')})".strip() for n in novedades[:3])
+            lineas = "\n".join(f"• {n.get('titulo', 'Novedad')} ({n.get('fecha', '')})".strip() for n in _corte(novedades, 3))
             return ChatResponse(
                 respuesta=f"Lo más reciente:\n{lineas}\nLas ves completas en la sección Novedades. ¿Te interesa alguna convocatoria?",
                 sugerencias=["Inscribirme", "Ver programas", "Postulaciones"],
@@ -279,7 +329,7 @@ def _responder(mensaje: str) -> ChatResponse:
         fichas = _cargar_fichas()
         if fichas:
             lineas = "\n".join(
-                f"• Ficha {f.get('numero', '?')} — {f.get('programa', '')} ({f.get('jornada', '')})" for f in fichas[:5]
+                f"• Ficha {f.get('numero', '?')} — {f.get('programa', '')} ({f.get('jornada', '')})" for f in _corte(fichas, 5)
             )
             return ChatResponse(
                 respuesta=f"Fichas registradas:\n{lineas}\nSi buscas una en especial, dime el número.",
@@ -296,7 +346,7 @@ def _responder(mensaje: str) -> ChatResponse:
         if posts:
             lineas = "\n".join(
                 f"• {p.get('titulo', '')} — {p.get('cupos', '?')} cupos (cierra {p.get('fecha_cierre', '')})"
-                for p in posts[:3]
+                for p in _corte(posts, 3)
             )
             return ChatResponse(
                 respuesta=f"Convocatorias abiertas:\n{lineas}",
@@ -310,14 +360,14 @@ def _responder(mensaje: str) -> ChatResponse:
     # 11. Niveles: técnicas / tecnologías
     if _contiene(texto, ["tecnolog", "tecnologo"]):
         programas = [p for p in _cargar_programas() if _nivel_norm(p) == "tecnologia"]
-        lineas = "\n".join(_linea_programa(p) for p in programas[:6]) if programas else "• ADSO\n• Gestión Empresarial"
+        lineas = "\n".join(_linea_programa(p) for p in _corte(programas, 6)) if programas else "• ADSO\n• Gestión Empresarial"
         return ChatResponse(
             respuesta=f"Tecnologías disponibles:\n{lineas}\nToca 'Ver programas' para inscribirte directo en Sofia Plus.",
             sugerencias=["Nivel técnico", "Inscribirme", "Requisitos"],
         )
     if _contiene(texto, ["tecnica", "tecnico", "tecnicas"]):
         programas = [p for p in _cargar_programas() if _nivel_norm(p) == "tecnica"]
-        lineas = "\n".join(_linea_programa(p) for p in programas[:6]) if programas else "• Técnico en Programación\n• Técnico en Sistemas"
+        lineas = "\n".join(_linea_programa(p) for p in _corte(programas, 6)) if programas else "• Técnico en Programación\n• Técnico en Sistemas"
         return ChatResponse(
             respuesta=f"Técnicas disponibles:\n{lineas}\n¿Te gusta alguna? Te explico la inscripción.",
             sugerencias=["Nivel tecnológico", "Inscribirme", "Requisitos"],
@@ -327,7 +377,7 @@ def _responder(mensaje: str) -> ChatResponse:
     if _contiene(texto, ["virtual", "presencial", "modalidad", "a distancia"]):
         programas = _cargar_programas()
         tnorm = "virtual" if "virtual" in texto else "presencial"
-        filtrados = [p for p in programas if _norm(str(p.get("modalidad", ""))) == tnorm][:5]
+        filtrados = _corte([p for p in programas if _norm(str(p.get("modalidad", ""))) == tnorm], 5)
         lineas = "\n".join(_linea_programa(p) for p in filtrados) if filtrados else ""
         extra = f"\n{lineas}" if lineas else ""
         return ChatResponse(
@@ -348,7 +398,7 @@ def _responder(mensaje: str) -> ChatResponse:
         )
     if _contiene(texto, ["programas virtuales", "ver programas", "lista de programas", "oferta", "catalogo", "cursos disponibles", "que programas"]):
         programas = _cargar_programas()
-        lineas = "\n".join(_linea_programa(p) for p in programas[:6]) if programas else ""
+        lineas = "\n".join(_linea_programa(p) for p in _corte(programas, 6)) if programas else ""
         extra = f"\n{lineas}" if lineas else ""
         return ChatResponse(
             respuesta=f"Tenemos {len(programas) or '16+'} programas entre técnicos y tecnológicos.{extra}\nBaja a 'Elige tu programa' y filtra por modalidad o jornada.",
@@ -376,6 +426,50 @@ def _responder(mensaje: str) -> ChatResponse:
                 sugerencias=["Inscribirme", "Requisitos", "Ver programas"],
             )
 
+    # 13b. Más áreas: creatividad, social, salud, cocina y oficios
+    if _contiene(texto, ["diseno", "creativ", "arte", "fotografia", "multimedia", "dibujo", "animacion", "audiovisual", "musica"]):
+        return _respuesta_area(
+            "creatividad y diseño",
+            ["diseno", "arte", "fotografia", "multimedia", "animacion", "dibujo", "musica", "audiovisual", "creativ"],
+            "Busca palabras como 'diseño', 'foto' o 'multimedia'.",
+            detallado,
+        )
+    if _contiene(texto, ["social", "comunidad", "infancia", "pedagog", "deporte", "recreacion", "cultura", "turismo"]):
+        return _respuesta_area(
+            "el área social y comunitaria",
+            ["social", "comunidad", "infancia", "pedagog", "deporte", "recreacion", "cultura", "turismo"],
+            "Busca palabras como 'social', 'deporte' o 'comunidad'.",
+            detallado,
+        )
+    if _contiene(texto, ["salud", "enfermeria", "farmacia"]):
+        return _respuesta_area(
+            "salud",
+            ["salud", "enfermeria", "farmacia"],
+            "Busca palabras como 'salud' o 'enfermería'.",
+            detallado,
+        )
+    if _contiene(texto, ["cocina", "gastronomia", "alimentos", "panaderia", "pasteleria"]):
+        return _respuesta_area(
+            "cocina y gastronomía",
+            ["cocina", "gastronomia", "alimentos", "panaderia", "pasteleria"],
+            "Busca palabras como 'cocina' o 'gastronomía'.",
+            detallado,
+        )
+    if _contiene(texto, ["electric", "electronic", "mecanica", "soldadura", "construccion", "mantenimiento", "automotriz"]):
+        return _respuesta_area(
+            "oficios e industria",
+            ["electric", "electronic", "mecanica", "soldadura", "construccion", "mantenimiento", "automotriz"],
+            "Busca palabras como 'electricidad', 'mecánica' o 'construcción'.",
+            detallado,
+        )
+    if _contiene(texto, ["contab", "finanzas", "nomina"]):
+        return _respuesta_area(
+            "contabilidad y finanzas",
+            ["contab", "finanzas", "nomina"],
+            "Busca palabras como 'contabilidad' o 'finanzas'.",
+            detallado,
+        )
+
     # Palabras sueltas de áreas populares (aunque no matcheen exacto)
     if _contiene(texto, ["software", "adso", "programacion", "sistemas", "desarrollo", "redes", "ciberseguridad"]):
         return ChatResponse(
@@ -402,6 +496,33 @@ def _responder(mensaje: str) -> ChatResponse:
             sugerencias=["Ver programas", "Inscribirme"],
         )
 
+    # 13c. Sede, duración y Betowa (antes del "dónde" genérico)
+    if _contiene(texto, ["sede", "direccion", "ubicacion", "donde queda", "donde estan", "como llego"]):
+        return ChatResponse(
+            respuesta=(
+                "La formación se imparte en los centros SENA de tu ciudad (CFDCM y demás sedes). "
+                "Cada programa en Sofia Plus indica su sede y jornada: busca el programa y revisa su ficha antes de inscribirte."
+            ),
+            sugerencias=["Ver programas", "Inscribirme", "Programas virtuales"],
+        )
+    if _contiene(texto, ["cuanto dura", "cuanto tiempo", "duracion", "cuantos meses", "cuantos semestres"]):
+        return ChatResponse(
+            respuesta=(
+                "Cada tarjeta de programa indica su duración. En general: las técnicas son más cortas "
+                "(alrededor de un año con etapa productiva) y las tecnologías más largas (alrededor de dos años). "
+                "Revisa la duración exacta en la tarjeta del programa que te guste."
+            ),
+            sugerencias=["Ver programas", "Nivel técnico", "Nivel tecnológico"],
+        )
+    if _contiene(texto, ["betowa"]):
+        return ChatResponse(
+            respuesta=(
+                "Betowa (https://betowa.sena.edu.co) es para cursos cortos y formación complementaria. "
+                "Para carreras técnicas y tecnológicas inscríbete en Sofia Plus. ¿Buscas un curso corto o una carrera?"
+            ),
+            sugerencias=["Ver programas", "Inscribirme", "Novedades"],
+        )
+
     # 14. Ubicación / contacto / horarios de atención
     if _contiene(texto, ["donde", "ubicacion", "direccion", "sede", "contacto", "telefono", "correo", "horario de atencion", "quien eres", "eres humano", "robot"]):
         return ChatResponse(
@@ -413,19 +534,19 @@ def _responder(mensaje: str) -> ChatResponse:
         )
 
     # 15. Fallback inteligente: repite lo que entendió + guía
-    return ChatResponse(
-        respuesta=(
-            "Gracias por tu mensaje. Puedo orientarte sobre programas, inscripciones en Sofia Plus, "
-            "requisitos, costos (todo gratis), modalidades y novedades. Prueba con: 'quiero estudiar software' o 'cómo me inscribo'."
-        ),
-        sugerencias=SUGERENCIAS_BASE,
+    base = (
+        "Gracias por tu mensaje. Puedo orientarte sobre programas, inscripciones en Sofia Plus, "
+        "requisitos, costos (todo gratis), modalidades y novedades. Prueba con: 'quiero estudiar software' o 'cómo me inscribo'."
     )
+    if detallado:
+        base += " También busco por área: tecnología, negocios, creatividad, social, salud, cocina u oficios."
+    return ChatResponse(respuesta=base, sugerencias=SUGERENCIAS_BASE)
 
 
 @router.post("", response_model=ChatResponse)
 def chatear(datos: ChatRequest) -> ChatResponse:
     """Recibe un mensaje de cualquier visitante y devuelve la respuesta."""
-    return _responder(datos.mensaje.strip())
+    return _responder(datos.mensaje.strip(), detallado=datos.detalle == "detallado")
 
 
 @router.get("/sugerencias", response_model=list[str])

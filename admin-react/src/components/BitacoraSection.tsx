@@ -1,14 +1,13 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { exigirSesion } from "../auth/AuthContext";
 import { TIPOS_EVIDENCIA } from "../data/catalogos";
 import { api, type Evidencia, type Ficha } from "../lib/api";
 import { useToast } from "./Toast";
 import ConfirmModal from "./ConfirmModal";
+import EvidenciaImagenesUploader, { MAX_BYTES, MAX_FOTOS, TIPOS_OK } from "./EvidenciaImagenesUploader";
 import { Card, Field, PrimaryButton, Select, TextArea, TextInput } from "./ui";
 
-const TIPOS_OK = ["image/jpeg", "image/png", "image/webp"];
-const MAX_FOTOS = 4;
-const MAX_BYTES = 5 * 1024 * 1024;
+
 
 export function useFichas(tick: number) {
   const [fichas, setFichas] = useState<Ficha[]>([]);
@@ -47,8 +46,10 @@ export default function BitacoraSection({
   const [enviando, setEnviando] = useState(false);
   const [porBorrar, setPorBorrar] = useState<Evidencia | null>(null);
   const [borrando, setBorrando] = useState(false);
-  const [arrastrando, setArrastrando] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Previews uniformes: se generan una vez por archivo y se liberan al cambiar.
+  const previews = useMemo(() => archivos.map((f) => URL.createObjectURL(f)), [archivos]);
+  useEffect(() => () => previews.forEach((u) => URL.revokeObjectURL(u)), [previews]);
 
   const cargar = useCallback(async (numero: string) => {
     if (!numero) {
@@ -97,6 +98,16 @@ export default function BitacoraSection({
 
   function quitar(i: number) {
     setArchivos((a) => a.filter((_, j) => j !== i));
+  }
+
+  function mover(from: number, to: number) {
+    setArchivos((a) => {
+      if (to < 0 || to >= a.length) return a;
+      const copia = [...a];
+      const [f] = copia.splice(from, 1);
+      copia.splice(to, 0, f);
+      return copia;
+    });
   }
 
   async function enviar(e: React.FormEvent) {
@@ -236,89 +247,15 @@ export default function BitacoraSection({
                 maxLength={1000}
               />
             </Field>
-            <div className="grid gap-2">
-              <span className="text-[11px] font-semibold text-ink">Archivos de la evidencia</span>
-              <div
-                role="button"
-                tabIndex={0}
-                aria-label="Subir fotos: arrastra archivos o haz clic para explorar"
-                onClick={() => inputRef.current?.click()}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
-                    inputRef.current?.click();
-                  }
-                }}
-                onDragEnter={(e) => {
-                  e.preventDefault();
-                  setArrastrando(true);
-                }}
-                onDragOver={(e) => e.preventDefault()}
-                onDragLeave={(e) => {
-                  e.preventDefault();
-                  setArrastrando(false);
-                }}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  setArrastrando(false);
-                  if (e.dataTransfer?.files) validarYAgregar(e.dataTransfer.files);
-                }}
-                className={`cursor-pointer rounded-[14px] border-[1.5px] border-dashed px-5 pb-4 pt-6 text-center transition-all ${
-                  arrastrando
-                    ? "scale-[1.005] border-neon bg-neon/[0.09] shadow-[0_0_0_4px_rgba(163,230,53,0.12)]"
-                    : "border-neon/30 bg-gradient-to-b from-neon/[0.06] to-transparent hover:border-neon hover:bg-neon/[0.05]"
-                }`}
-              >
-                <input
-                  ref={inputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp"
-                  multiple
-                  hidden
-                  onChange={(e) => {
-                    if (e.target.files) validarYAgregar(e.target.files);
-                    e.target.value = "";
-                  }}
-                />
-                <div className="mx-auto mb-2 grid h-12 w-12 place-items-center rounded-[14px] bg-neon/10 text-neon">
-                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M12 16V4m0 0L7 9m5-5l5 5" /><path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" /></svg>
-                </div>
-                <p className="text-[14px] font-semibold text-ink">
-                  Arrastra tus fotos aquí o <span className="text-neon underline underline-offset-2">explora archivos</span>
-                </p>
-                <p className="text-[12px] text-muted">
-                  JPG · PNG · WebP — máx. 4 fotos de 5 MB c/u · quedan atadas a la ficha elegida
-                </p>
-                <p className="mt-2 inline-block rounded-full bg-neon/10 px-3 py-[3px] text-[11px] font-bold text-neon">
-                  {archivos.length} / 4 archivos
-                </p>
-              </div>
-              {archivos.length > 0 && (
-                <div className="mt-3 grid grid-cols-4 gap-2 max-sm:grid-cols-2">
-                  {archivos.map((f, i) => (
-                    <div key={`${f.name}-${i}`} className="relative overflow-hidden rounded-xl border border-line bg-white/[0.02]">
-                      <img src={URL.createObjectURL(f)} alt={f.name} className="block h-[76px] w-full object-cover" />
-                      <div className="flex items-center gap-1 px-1.5 py-1 text-[10px] text-muted">
-                        <span className="flex-1 overflow-hidden text-ellipsis whitespace-nowrap">
-                          {f.name} · {Math.max(1, Math.round(f.size / 1024))} KB
-                        </span>
-                      </div>
-                      <button
-                        type="button"
-                        aria-label={`Quitar ${f.name}`}
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          quitar(i);
-                        }}
-                        className="absolute right-1 top-1 grid h-[22px] w-[22px] place-items-center rounded-full bg-black/70 text-[11px] text-white transition-colors hover:bg-danger"
-                      >
-                        ✕
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <EvidenciaImagenesUploader
+              archivos={archivos}
+              previews={previews}
+              onAgregar={validarYAgregar}
+              onQuitar={quitar}
+              onMover={mover}
+              onError={(m) => setMsg(`✕ ${m}`)}
+              deshabilitado={enviando}
+            />
             <label className="flex cursor-pointer select-none items-center gap-2.5 text-[13px] font-semibold text-ink">
               <span className="relative h-[25px] w-11 flex-none">
                 <input
@@ -379,14 +316,29 @@ export default function BitacoraSection({
                   {e.descripcion && <p className="text-[13px] text-muted">{e.descripcion}</p>}
                   {(e.imagenes || []).length > 0 && (
                     <div className="grid grid-cols-4 gap-2 max-sm:grid-cols-2">
-                      {(e.imagenes || []).map((u) => (
-                        <a key={u} href={u} target="_blank" rel="noopener">
-                          <img
-                            src={u}
-                            alt={e.titulo}
-                            loading="lazy"
-                            className="block h-[76px] w-full rounded-[10px] border border-line object-cover"
-                          />
+                      {(e.imagenes || []).map((u, i) => (
+                        <a
+                          key={u}
+                          href={u}
+                          target="_blank"
+                          rel="noopener"
+                          title={i === 0 ? "Portada en la página principal" : `Foto ${i + 1}`}
+                          className="relative block overflow-hidden rounded-[10px] border border-line focus-visible:outline-2 focus-visible:outline-neon"
+                        >
+                          {/* Marco fijo 4/3: cualquier imagen se recorta igual */}
+                          <span className="block aspect-[4/3] w-full overflow-hidden bg-black/20">
+                            <img
+                              src={u}
+                              alt={`${e.titulo} — foto ${i + 1}`}
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          </span>
+                          {i === 0 && (
+                            <span className="absolute left-1.5 top-1.5 rounded-full bg-neon px-2 py-[2px] text-[10px] font-extrabold text-[#071307]">
+                              Portada
+                            </span>
+                          )}
                         </a>
                       ))}
                     </div>

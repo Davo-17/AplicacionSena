@@ -23,23 +23,44 @@ const AuthContext = createContext<AuthState>({
   logout: () => {},
 });
 
+/** Login principal del sitio (fuera del panel): ahí se vuelve al salir. */
+const LOGIN_PRINCIPAL = "/login.html";
+
+function irALoginPrincipal() {
+  window.location.replace(LOGIN_PRINCIPAL);
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<Usuario | null>(null);
   const [cargando, setCargando] = useState(true);
-
   useEffect(() => {
     if (!getToken()) {
       setCargando(false);
       return;
     }
-    getYo()
+    let vivo = true;
+    // Si el backend no responde, no colgamos el splash: se cae al login.
+    const limite = new Promise<null>((resolver) => setTimeout(() => resolver(null), 8000));
+    Promise.race([getYo(), limite])
       .then((u) => {
+        if (!vivo) return;
+        if (!u) {
+          setUser(null);
+          return;
+        }
         // Igual que el panel anterior: solo administradores.
         setUser(u.rol === "administrador" ? u : null);
         if (u.rol !== "administrador") logoutApi();
       })
-      .catch(() => setUser(null))
-      .finally(() => setCargando(false));
+      .catch(() => {
+        if (vivo) setUser(null);
+      })
+      .finally(() => {
+        if (vivo) setCargando(false);
+      });
+    return () => {
+      vivo = false;
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
@@ -62,10 +83,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     logoutApi();
     setUser(null);
+    // Al salir del panel se vuelve al login principal, no al del panel.
+    irALoginPrincipal();
   }, []);
 
   useEffect(() => {
-    const onExp = () => setUser(null);
+    // Sesión expirada a mitad del trabajo: también vuelve al login principal.
+    const onExp = () => {
+      setUser(null);
+      irALoginPrincipal();
+    };
     window.addEventListener("dajesa:logout", onExp);
     return () => window.removeEventListener("dajesa:logout", onExp);
   }, []);

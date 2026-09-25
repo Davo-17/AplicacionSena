@@ -237,13 +237,20 @@ loginForm.addEventListener("submit", function(event) {
     })
     .then((data) => {
 
-        // Guardamos el token para usarlo en index.html
-        localStorage.setItem(
-            "access_token",
-            data.access_token
-        );
-
-        loginCorrecto();
+        /*
+            Cuenta exenta: entra directo solo con la contraseña.
+            Las demás pasan al segundo paso con código al correo y el
+            token se guarda solo después de verificarlo.
+        */
+        if (data.requiere_codigo === false) {
+            localStorage.setItem(
+                "access_token",
+                data.access_token
+            );
+            loginCorrecto();
+        } else {
+            iniciarVerificacion(username, data.access_token);
+        }
 
     })
     .catch((err) => {
@@ -862,3 +869,182 @@ animateParticles();
 
 })();
 
+
+
+
+
+/* =========================================================
+   SEGUNDO PASO: código de verificación (estilo apps reales)
+   - Contraseña OK -> se envía código de 6 dígitos al correo.
+   - Anuncio con temporizador de 3 minutos para escribirlo.
+   - El token se guarda solo después de verificar el código.
+========================================================= */
+
+const TIEMPO_CODIGO = 180;
+
+let correoPendiente = "";
+let tokenPendiente = "";
+let segundosRestantes = 0;
+let intervaloTimer = null;
+
+
+function pintarTimer() {
+    const el = document.getElementById("verifyTimer");
+    if (!el) return;
+    const m = Math.floor(segundosRestantes / 60);
+    const s = segundosRestantes % 60;
+    el.textContent = m + ":" + String(s).padStart(2, "0");
+    el.classList.toggle("agotado", segundosRestantes <= 0);
+}
+
+function detenerTimer() {
+    if (intervaloTimer) {
+        clearInterval(intervaloTimer);
+        intervaloTimer = null;
+    }
+}
+
+function iniciarTimer() {
+    detenerTimer();
+    segundosRestantes = TIEMPO_CODIGO;
+    pintarTimer();
+    intervaloTimer = setInterval(() => {
+        segundosRestantes--;
+        if (segundosRestantes <= 0) {
+            segundosRestantes = 0;
+            detenerTimer();
+            const p = document.querySelector("#verifyError p");
+            if (p) p.textContent = "El tiempo se agotó. Pide un código nuevo con Reenviar.";
+            document.getElementById("verifyError").classList.add("show");
+        }
+        pintarTimer();
+    }, 1000);
+}
+
+function mostrarPasoCodigo(correo) {
+    document.getElementById("loginForm").hidden = true;
+    document.getElementById("verifyForm").hidden = false;
+    document.getElementById("verifyEmail").textContent = correo;
+    document.getElementById("verifyCode").value = "";
+    document.getElementById("verifyError").classList.remove("show");
+    iniciarTimer();
+    document.getElementById("verifyCode").focus();
+}
+
+function volverAlLogin() {
+    detenerTimer();
+    correoPendiente = "";
+    tokenPendiente = "";
+    document.getElementById("verifyForm").hidden = true;
+    document.getElementById("loginForm").hidden = false;
+    loginButton.disabled = false;
+    loginButton.classList.remove("loading");
+    buttonText.textContent = "Ingresar";
+    passwordInput.value = "";
+    usernameInput.focus();
+}
+
+
+/* Contraseña verificada: pedimos el código y mostramos el anuncio. */
+async function iniciarVerificacion(correo, token) {
+    correoPendiente = correo;
+    tokenPendiente = token;
+    buttonText.textContent = "Enviando código...";
+    try {
+        const res = await fetch(API_URL + "/auth/otp/solicitar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: correo })
+        });
+        if (!res.ok) {
+            const datos = await res.json().catch(() => ({}));
+            throw new Error(datos.detail || "No se pudo enviar el código. Inténtalo de nuevo.");
+        }
+        mostrarPasoCodigo(correo);
+    } catch (err) {
+        console.error(err);
+        if (errorTexto) errorTexto.textContent = err.message || ERROR_DEFECTO;
+        errorMessage.classList.add("show");
+    } finally {
+        loginButton.disabled = false;
+        loginButton.classList.remove("loading");
+        buttonText.textContent = "Ingresar";
+    }
+}
+
+
+/* Verificar el código: recién ahí se guarda el token y se entra. */
+document.getElementById("verifyForm").addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const caja = document.getElementById("verifyError");
+    const texto = caja.querySelector("p");
+    caja.classList.remove("show");
+    const codigo = document.getElementById("verifyCode").value.trim();
+    if (!/^\d{6}$/.test(codigo)) {
+        if (texto) texto.textContent = "Escribe los 6 dígitos del código.";
+        caja.classList.add("show");
+        return;
+    }
+    if (segundosRestantes <= 0) {
+        if (texto) texto.textContent = "El tiempo se agotó. Pide un código nuevo con Reenviar.";
+        caja.classList.add("show");
+        return;
+    }
+    const btn = document.getElementById("verifyButton");
+    const btnTxt = document.getElementById("verifyButtonText");
+    btn.disabled = true;
+    btnTxt.textContent = "Verificando...";
+    try {
+        const res = await fetch(API_URL + "/auth/otp/verificar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: correoPendiente, codigo: codigo })
+        });
+        if (res.status === 429) throw new Error("Demasiados intentos. Espera e inténtalo de nuevo.");
+        const datos = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(datos.detail || "Código incorrecto. Revísalo e inténtalo de nuevo.");
+        detenerTimer();
+        localStorage.setItem("access_token", datos.access_token || tokenPendiente);
+        loginCorrecto();
+    } catch (err) {
+        console.error(err);
+        if (texto) texto.textContent = err.message || "No se pudo verificar. Inténtalo de nuevo.";
+        caja.classList.add("show");
+        document.getElementById("verifyCode").focus();
+    } finally {
+        btn.disabled = false;
+        btnTxt.textContent = "Verificar e ingresar";
+    }
+});
+
+
+/* Reenviar: pide otro código y reinicia los 3 minutos. */
+document.getElementById("verifyResend").addEventListener("click", async () => {
+    const btn = document.getElementById("verifyResend");
+    btn.disabled = true;
+    try {
+        const res = await fetch(API_URL + "/auth/otp/solicitar", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email: correoPendiente })
+        });
+        if (!res.ok) {
+            const datos = await res.json().catch(() => ({}));
+            throw new Error(datos.detail || "No se pudo reenviar. Inténtalo de nuevo.");
+        }
+        document.getElementById("verifyError").classList.remove("show");
+        document.getElementById("verifyCode").value = "";
+        iniciarTimer();
+        document.getElementById("verifyCode").focus();
+    } catch (err) {
+        console.error(err);
+        const caja = document.getElementById("verifyError");
+        const texto = caja.querySelector("p");
+        if (texto) texto.textContent = err.message || "No se pudo reenviar. Inténtalo de nuevo.";
+        caja.classList.add("show");
+    } finally {
+        btn.disabled = false;
+    }
+});
+
+document.getElementById("verifyBack").addEventListener("click", volverAlLogin);

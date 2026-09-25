@@ -41,6 +41,8 @@ class TokenResponse(BaseModel):
 
     access_token: str
     token_type: str = "bearer"
+    # False = la cuenta está exenta y entra directo sin código.
+    requiere_codigo: bool = True
 
 
 class UsuarioActual(BaseModel):
